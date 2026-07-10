@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+﻿const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { join } = require('path');
 const fs = require('fs');
 const path = require('path');
@@ -205,6 +205,7 @@ ipcMain.handle('window:maximize', () => { if (mainWindow?.isMaximized()) mainWin
 ipcMain.handle('window:close', () => mainWindow?.close());
 ipcMain.handle('window:is-maximized', () => mainWindow?.isMaximized() ?? false);
 ipcMain.handle('fs:read-dir', async (_e, p) => readDirTree(p));
+ipcMain.handle('fs:read-dir-by-ext', async (_e, p, exts) => readDirByExt(p, Array.isArray(exts) ? exts : []));
 ipcMain.handle('fs:read-file', async (_e, p) => fs.promises.readFile(p, 'utf-8'));
 ipcMain.handle('fs:write-file', async (_e, p, c) => { await fs.promises.writeFile(p, c, 'utf-8'); return true; });
 ipcMain.handle('fs:create-file', async (_e, p, c) => { await fs.promises.writeFile(p, c||'', 'utf-8'); return true; });
@@ -216,7 +217,7 @@ ipcMain.handle('fs:exists', async (_e, p) => fs.existsSync(p));
 ipcMain.handle('dialog:open-folder', async () => { console.log('[Main] dialog:open-folder called'); const r = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] }); console.log('[Main] dialog result:', r.canceled ? 'canceled' : r.filePaths[0]); return r.canceled ? null : r.filePaths[0]; });
 ipcMain.handle('dialog:open-file', async (_e, f) => { const r = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: f||[] }); return r.canceled ? null : r.filePaths[0]; });
 ipcMain.handle('dialog:save-file', async (_e, f) => { const r = await dialog.showSaveDialog(mainWindow, { filters: f||[{name:'HTML',extensions:['html','htm']},{name:'CSS',extensions:['css']},{name:'JS',extensions:['js','ts']},{name:'All',extensions:['*']}] }); return r.canceled ? null : r.filePath; });
-ipcMain.handle('dialog:confirm', async (_e, m) => { const r = await dialog.showMessageBox(mainWindow, { type:'question', buttons:['确认','取消'], message: m }); return r.response === 0; });
+ipcMain.handle('dialog:confirm', async (_e, m) => { const r = await dialog.showMessageBox(mainWindow, { type:'question', buttons:['纭','鍙栨秷'], message: m }); return r.response === 0; });
 ipcMain.handle('shell:open-external', (_e, u) => shell.openExternal(u));
 ipcMain.handle('shell:show-item', (_e, p) => shell.showItemInFolder(p));
 ipcMain.handle('app:get-version', () => app.getVersion());
@@ -249,6 +250,36 @@ ipcMain.handle('fs:watch', (_e, p) => {
 ipcMain.handle('fs:unwatch', () => { if (fileWatcher) { fileWatcher.close(); fileWatcher=null; } return true; });
 
 const IGNORE = new Set(['.git','node_modules','.DS_Store','.livefront','dist','out','Thumbs.db']);
+function readDirByExt(rootDir, extensions) {
+  const extSet = new Set((extensions || []).map(e => (e || '').replace(/^\./, '').toLowerCase()));
+  const results = [];
+
+  const walk = (currentDir, depth) => {
+    if (depth > 10) return;
+    let entries;
+    try { entries = fs.readdirSync(currentDir, { withFileTypes: true }); } catch { return; }
+
+    for (const entry of entries) {
+      if (IGNORE.has(entry.name)) continue;
+
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath, depth + 1);
+        continue;
+      }
+
+      if (!entry.isFile()) continue;
+      const ext = path.extname(entry.name).replace(/^\./, '').toLowerCase();
+      if (extSet.size === 0 || extSet.has(ext)) {
+        results.push(fullPath);
+      }
+    }
+  };
+
+  walk(rootDir, 0);
+  return results;
+}
+
 function readDirTree(dp, depth) {
   if ((depth||0)>10) return [];
   let entries; try { entries = fs.readdirSync(dp, {withFileTypes:true}); } catch { return []; }
@@ -260,7 +291,7 @@ function readDirTree(dp, depth) {
 }
 
 
-// ============ AI 代理 ============
+// ============ AI 浠ｇ悊 ============
 // No preset AI endpoints - user provides full URL as provider
 
 ipcMain.handle('ai:request', async (_e, { provider, apiKey, model, messages, maxTokens }) => {
@@ -564,4 +595,6 @@ ipcMain.handle('project:export-zip', async (_e, { projectPath, outputPath }) => 
 });
 app.whenReady().then(() => { createWindow(); app.on('activate', () => { if (BrowserWindow.getAllWindows().length===0) createWindow(); }); });
 app.on('window-all-closed', () => { if (process.platform!=='darwin') app.quit(); });
+
+
 

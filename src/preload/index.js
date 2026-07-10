@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron')
+﻿const { contextBridge, ipcRenderer } = require('electron')
 // electronAPI removed - not needed
 
 
@@ -28,6 +28,7 @@ const api = {
   },
   fs: {
     readDir: (path) => ipcRenderer.invoke('fs:read-dir', path),
+    readDirByExt: (path, extensions) => ipcRenderer.invoke('fs:read-dir-by-ext', path, extensions),
     readFile: (path) => ipcRenderer.invoke('fs:read-file', path),
     writeFile: (path, content) => ipcRenderer.invoke('fs:write-file', path, content),
     createFile: (path, content) => ipcRenderer.invoke('fs:create-file', path, content),
@@ -71,6 +72,7 @@ const api = {
   ai: {
     request: (params) => ipcRenderer.invoke('ai:request', params),
     streamRequest: (params) => ipcRenderer.invoke('ai:stream-request', params),
+    cancelStream: (termId) => ipcRenderer.send('ai:stream-cancel', { termId }),
     onStreamChunk: (callback) => {
       const handler = (_e, data) => callback(data)
       ipcRenderer.on('ai:stream-chunk', handler)
@@ -80,6 +82,11 @@ const api = {
       const handler = (_e, data) => callback(data)
       ipcRenderer.on('ai:stream-end', handler)
       return () => ipcRenderer.removeListener('ai:stream-end', handler)
+    },
+    onStreamError: (callback) => {
+      const handler = (_e, data) => callback(data)
+      ipcRenderer.on('ai:stream-error', handler)
+      return () => ipcRenderer.removeListener('ai:stream-error', handler)
     }
   },
   preview: {
@@ -128,3 +135,4 @@ if (process.contextIsolated) {
   window.electron = { ipcRenderer }
   window.api = api
 }
+

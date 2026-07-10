@@ -1,37 +1,38 @@
 {
-  "name": "livefront",
-  "version": "0.1.0",
-  "description": "LiveFront - Preview-first frontend development tool",
-  "main": "out/main/index.js",
-  "author": "LiveFront Team <team@livefront.com>",
-  "scripts": {
-    "dev": "electron-vite dev",
-    "build": "electron-vite build",
-    "preview": "electron-vite preview",
-    "build:win": "electron-vite build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
-  },
-  "dependencies": {
-    "@xterm/addon-fit": "^0.11.0",
-    "@xterm/addon-webgl": "^0.19.0",
-    "archiver": "^8.0.0",
-    "chokidar": "^4.0.3",
-    "monaco-editor": "^0.52.0",
-    "node-pty": "^1.1.0",
-    "simple-git": "^3.36.0",
-    "xterm": "^5.3.0"
-  },
-  "devDependencies": {
-    "electron": "^43.0.0",
-    "electron-builder": "^26.0.0",
-    "electron-vite": "^5.0.0"
-  },
-  "keywords": [
-    "electron",
-    "livefront",
-    "frontend",
-    "preview"
-  ],
-  "license": "MIT"
+    "name":  "livefront",
+    "version":  "0.2.0",
+    "description":  "LiveFront - Preview-first frontend development tool",
+    "main":  "out/main/index.js",
+    "author":  "LiveFront Team \u003cteam@livefront.com\u003e",
+    "scripts":  {
+                    "dev":  "electron-vite dev",
+                    "build":  "electron-vite build",
+                    "preview":  "electron-vite preview",
+                    "build:win":  "electron-vite build \u0026\u0026 electron-builder --win",
+                    "build:mac":  "electron-vite build \u0026\u0026 electron-builder --mac",
+                    "build:linux":  "electron-vite build \u0026\u0026 electron-builder --linux"
+                },
+    "dependencies":  {
+                         "@xterm/addon-fit":  "^0.11.0",
+                         "@xterm/addon-webgl":  "^0.19.0",
+                         "archiver":  "^8.0.0",
+                         "chokidar":  "^4.0.3",
+                         "monaco-editor":  "^0.52.0",
+                         "node-pty":  "^1.1.0",
+                         "simple-git":  "^3.36.0",
+                         "sucrase":  "^3.35.1",
+                         "xterm":  "^5.3.0"
+                     },
+    "devDependencies":  {
+                            "electron":  "^43.0.0",
+                            "electron-builder":  "^26.0.0",
+                            "electron-vite":  "^5.0.0"
+                        },
+    "keywords":  [
+                     "electron",
+                     "livefront",
+                     "frontend",
+                     "preview"
+                 ],
+    "license":  "MIT"
 }

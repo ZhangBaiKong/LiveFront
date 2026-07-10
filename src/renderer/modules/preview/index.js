@@ -77,6 +77,10 @@
       // 监听文件保存 → 防抖刷新
       ctx.eventBus.on('file:saved', (data) => {
         const ext = data.path.split('.').pop().toLowerCase()
+        if (['jsx', 'tsx', 'ts'].includes(ext)) {
+          this._debounceReactRefresh(data.path)
+          return
+        }
         if (['html', 'htm', 'css', 'js', 'mjs', 'json'].includes(ext)) {
           this._debounceRefresh()
         }
@@ -85,6 +89,10 @@
       // 监听 chokidar 的外部文件变化
       ctx.eventBus.on('file:changed', (data) => {
         const ext = data.path.split('.').pop().toLowerCase()
+        if (['jsx', 'tsx', 'ts'].includes(ext)) {
+          this._debounceReactRefresh(data.path)
+          return
+        }
         if (['html', 'htm', 'css', 'js', 'mjs', 'json'].includes(ext)) {
           this._debounceRefresh()
         }
@@ -107,6 +115,13 @@
         this._preview.refresh()
         LiveFront.Services.preview.refreshExternal()
       }, 300)
+    },
+
+    _debounceReactRefresh(filePath) {
+      if (this._reactRefreshTimer) clearTimeout(this._reactRefreshTimer)
+      this._reactRefreshTimer = setTimeout(() => {
+        this._preview.reactRefresh(filePath)
+      }, 200)
     },
 
     destroy() {

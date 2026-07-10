@@ -1,0 +1,6 @@
+﻿{
+  "name": "test-vue-project",
+  "dependencies": {
+    "vue": "^3.4.0"
+  }
+}

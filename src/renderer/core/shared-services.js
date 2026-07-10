@@ -1,4 +1,4 @@
-/* LiveFront 共享服务 */
+﻿/* LiveFront 鍏变韩鏈嶅姟 */
 window.LiveFront = window.LiveFront || {};
 
 LiveFront.Services = {
@@ -59,8 +59,10 @@ LiveFront.Services = {
   ai: {
     request(params) { return LiveFront.ipc.invoke('ai:request', params); },
     streamRequest(params) { return LiveFront.ipc.invoke('ai:stream-request', params); },
+    cancelStream(termId) { if (window.api?.ai?.cancelStream) window.api.ai.cancelStream(termId); },
     onStreamChunk(cb) { if (window.api?.ai?.onStreamChunk) return window.api.ai.onStreamChunk(cb); },
-    onStreamEnd(cb) { if (window.api?.ai?.onStreamEnd) return window.api.ai.onStreamEnd(cb); }
+    onStreamEnd(cb) { if (window.api?.ai?.onStreamEnd) return window.api.ai.onStreamEnd(cb); },
+    onStreamError(cb) { if (window.api?.ai?.onStreamError) return window.api.ai.onStreamError(cb); }
   },
   
   project: {
@@ -94,3 +96,13 @@ LiveFront.state = {
   fileDirty: {},
   selectedElement: null
 };
+
+LiveFront.Services.framework = {
+  async detect(projectPath) {
+    if (!LiveFront.FrameworkDetector?.detect) {
+      return { framework: "html", hasNodeModules: false, hasBuildScript: false }
+    }
+    return LiveFront.FrameworkDetector.detect(projectPath)
+  }
+}
+
