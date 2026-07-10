@@ -183,18 +183,6 @@ v4.0（2027+）
 
 ---
 
-## 截图
-
-> 2026 年开发中截图，最终效果可能有变化
-
-| 编辑 + 预览 | 元素选中 + 属性编辑 |
-|:---:|:---:|
-| ![编辑预览](docs/screenshot-editor.png) | ![属性面板](docs/screenshot-props.png) |
-
-| 修改线 | AI 对话 |
-|:---:|:---:|
-| ![修改线](docs/screenshot-modline.png) | ![AI](docs/screenshot-ai.png) |
-
 ---
 
 ## 快速开始
