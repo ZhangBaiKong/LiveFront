@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveFront</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/reset.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/core.css">
+  <link rel="stylesheet" href="./css/scrollbar.css">
+  <link rel="stylesheet" href="./css/themes/dark.css">
+  <link rel="stylesheet" href="./css/themes/light.css">
+  <link rel="stylesheet" href="./modules/editor/editor.css">
+  <link rel="stylesheet" href="./modules/preview/preview.css">
+  <link rel="stylesheet" href="./modules/modline/modline.css">
+  <link rel="stylesheet" href="./modules/effectline/effectline.css">
+  <link rel="stylesheet" href="./modules/ai/ai.css">
+  <link rel="stylesheet" href="./modules/materials/materials.css">
+  <link rel="stylesheet" href="./modules/terminal/terminal.css">
+  <link rel="stylesheet" href="./modules/build/build.css">
+  <link rel="stylesheet" href="./modules/git/git.css">
+</head>
+<body>
+  <header class="titlebar" id="titlebar">
+    <div class="titlebar-left">
+      <span class="titlebar-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+      <span class="titlebar-title">LiveFront</span>
+    </div>
+    <div class="titlebar-drag"></div>
+    <div class="titlebar-right">
+      <button class="titlebar-btn" id="btnMinimize" title="最小化">
+        <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="titlebar-btn" id="btnMaximize" title="最大化">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+      </button>
+      <button class="titlebar-btn titlebar-btn-close" id="btnClose" title="关闭">
+        <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+  <nav class="menubar" id="menubar"></nav>
+  <div class="main-body" id="mainBody">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-content" id="sidebarContent"></div>
+    </aside>
+    <div class="gutter gutter-vertical" id="gutterSidebar"></div>
+    <section class="main-center" id="mainCenter">
+      <div class="welcome" id="welcomePage">
+        <div class="welcome-inner">
+          <h1 class="welcome-logo">&#9889; LiveFront</h1>
+          <p class="welcome-tagline">看到效果，再写代码</p>
+          <div class="welcome-actions">
+            <button class="btn btn-primary" id="btnOpenFolder">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h5l2 2h5v7a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.2"/></svg>
+              打开文件夹
+            </button>
+            <button class="btn btn-ghost" id="btnNewProject">新建项目</button>
+          </div>
+          <div class="welcome-recent" id="recentProjects"></div>
+        </div>
+      </div>
+      <div class="workspace hidden" id="workspace">
+        <div class="workspace-main" id="workspaceMain"></div>
+        <div class="gutter gutter-vertical" id="gutterPreview"></div>
+        <div class="workspace-preview" id="workspacePreview"></div>
+      </div>
+    </section>
+    <div class="gutter gutter-vertical" id="gutterPanel"></div>
+    <aside class="panel" id="panel">
+      <div class="panel-tabs" id="panelTabs"></div>
+      <div class="panel-content" id="panelContent"></div>
+    </aside>
+  </div>
+  <footer class="statusbar" id="statusbar">
+    <div class="statusbar-left" id="statusbarLeft"></div>
+    <div class="statusbar-right" id="statusbarRight"></div>
+  </footer>
+  <div class="context-menu hidden" id="contextMenu"></div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

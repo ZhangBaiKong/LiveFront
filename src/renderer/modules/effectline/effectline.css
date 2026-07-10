@@ -1,0 +1,403 @@
+/* LiveFront 效果线 CSS */
+.effectline-container {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+  grid-row: 3;
+  grid-column: 1 / -1;
+}
+
+/* —— 头部 —— */
+.effectline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border);
+  height: 28px;
+  flex-shrink: 0;
+}
+.effectline-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.effectline-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.effectline-count {
+  font-size: 10px;
+  background: var(--accent-muted);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.effectline-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.effectline-btn {
+  font-size: 10px;
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  transition: background 80ms ease, border-color 80ms ease;
+}
+.effectline-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.effectline-btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.effectline-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* —— 效果列表 —— */
+.effectline-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* —— 效果卡片 —— */
+.effect-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: default;
+  user-select: none;
+  transition: transform 80ms ease, box-shadow 80ms ease, border-color 80ms ease;
+  position: relative;
+}
+.effect-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.effect-card.effect-disabled {
+  opacity: 0.45;
+}
+
+/* —— 分类色标 —— */
+.effect-card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.effect-card-dot.cat-click { background: #22c55e; }
+.effect-card-dot.cat-hover { background: #3b82f6; }
+.effect-card-dot.cat-scroll { background: #a855f7; }
+.effect-card-dot.cat-page { background: #f59e0b; }
+.effect-card-dot.cat-transition { background: #6b7280; }
+
+/* —— 卡片内容 —— */
+.effect-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.effect-card-row1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.effect-card-cat-label {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.effect-card-cat-label.cat-click { background: rgba(34,197,94,0.15); color: #22c55e; }
+.effect-card-cat-label.cat-hover { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.effect-card-cat-label.cat-scroll { background: rgba(168,85,247,0.15); color: #a855f7; }
+.effect-card-cat-label.cat-page { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.effect-card-cat-label.cat-transition { background: rgba(107,114,128,0.15); color: #6b7280; }
+
+.effect-card-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.effect-card-selector {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* —— 卡片操作按钮 —— */
+.effect-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 80ms ease;
+}
+.effect-card:hover .effect-card-actions { opacity: 1; }
+
+.effect-card-action {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: background 80ms ease, color 80ms ease, border-color 80ms ease;
+}
+.effect-card-action:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+.effect-card-action.action-delete:hover {
+  background: var(--danger, #ef4444);
+  color: #fff;
+  border-color: var(--danger, #ef4444);
+}
+
+/* —— 启用/禁用开关 —— */
+.effect-toggle {
+  width: 28px;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 150ms ease;
+}
+.effect-toggle.active {
+  background: var(--accent);
+}
+.effect-toggle::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform 150ms ease;
+}
+.effect-toggle.active::after {
+  transform: translateX(14px);
+}
+
+/* —— 空状态 —— */
+.effectline-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  gap: 6px;
+  padding: 16px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ═══════════ 快捷工具栏 ═══════════ */
+.effect-toolbar {
+  position: absolute;
+  z-index: 10000;
+  background: rgba(30, 30, 40, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  pointer-events: auto;
+  animation: effect-toolbar-in 150ms ease;
+}
+@keyframes effect-toolbar-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.effect-toolbar-btn {
+  position: relative;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.85);
+  transition: background 80ms ease;
+  white-space: nowrap;
+}
+.effect-toolbar-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* —— 下拉菜单 —— */
+.effect-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 160px;
+  background: rgba(30, 30, 40, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-md);
+  padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 10001;
+  animation: effect-dropdown-in 100ms ease;
+}
+@keyframes effect-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.effect-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 60ms ease;
+}
+.effect-dropdown-item:hover {
+  background: rgba(74, 108, 247, 0.3);
+}
+.effect-dropdown-item .effect-dropdown-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.effect-dropdown-sep {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 3px 0;
+}
+.effect-dropdown-item.effect-dropdown-more {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+/* ═══════════ 编辑弹窗 ═══════════ */
+.effect-edit-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.effect-edit-dialog {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+.effect-edit-dialog h3 {
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+.effect-edit-dialog label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.effect-edit-dialog input,
+.effect-edit-dialog select {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-family: var(--font-sans);
+  box-sizing: border-box;
+  transition: border-color 150ms ease;
+}
+.effect-edit-dialog input:focus,
+.effect-edit-dialog select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.effect-edit-dialog input[readonly] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.effect-edit-dialog .effect-edit-preview {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.effect-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

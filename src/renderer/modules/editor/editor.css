@@ -1,0 +1,150 @@
+/* LiveFront Editor 模块样式 */
+
+/* ── Tab 栏 ── */
+.editor-tab-bar {
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  min-height: 36px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+.editor-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.editor-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 100%;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background 80ms ease, color 80ms ease;
+  position: relative;
+}
+.editor-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+.editor-tab.active {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+.editor-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+}
+
+.tab-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.tab-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.tab-dirty {
+  color: var(--accent);
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-left: -2px;
+}
+.tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 80ms ease, background 80ms ease;
+  flex-shrink: 0;
+  margin-left: 2px;
+  line-height: 1;
+}
+.editor-tab:hover .tab-close {
+  opacity: 1;
+}
+.tab-close:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+}
+
+/* ── 编辑器容器 ── */
+.editor-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.editor-monaco {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── 空状态 ── */
+.editor-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  gap: 16px;
+  user-select: none;
+}
+.editor-empty-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.editor-empty-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+}
+.editor-empty-shortcuts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.editor-empty-shortcuts kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+/* ── 代码行高亮装饰（元素跳转时） ── */
+.editor-line-highlight-decoration {
+  background: rgba(74, 108, 247, 0.12);
+  animation: line-highlight-fade 2s ease forwards;
+}
+@keyframes line-highlight-fade {
+  0% { background: rgba(74, 108, 247, 0.20); }
+  100% { background: transparent; }
+}

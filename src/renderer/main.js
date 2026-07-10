@@ -1,0 +1,42 @@
+/* LiveFront main entry */
+import './core/dom-utils.js'
+import './core/event-bus.js'
+import './core/storage.js'
+import './core/ipc-client.js'
+import './core/shared-services.js'
+import './core/command-registry.js'
+import './core/shortcut-manager.js'
+import './core/menu-manager.js'
+import './core/context-menu.js'
+import './core/layout-manager.js'
+import './core/panel-manager.js'
+import './core/module-registry.js'
+import './core/module-loader.js'
+
+// 功能模块
+import './modules/filetree/index.js'
+import './modules/editor/editor.js'
+import './modules/editor/tab-bar.js'
+import './modules/editor/index.js'
+import './modules/preview/preview.js'
+import './modules/preview/index.js'
+import './modules/props-panel/index.js'
+import './modules/modline/index.js'
+import './modules/effectline/effect-presets.js'
+import './modules/effectline/effectline.js'
+import './modules/effectline/index.js'
+import './modules/ai/index.js'
+import './modules/materials/static-data.js'
+import './modules/materials/material-apply.js'
+import './modules/materials/materials.js'
+import './modules/materials/index.js'
+
+import './modules/terminal/terminal.js'
+import './modules/build/build.js'
+import './modules/build/index.js'
+import './modules/git/index.js'
+import './modules/git/git.js'
+
+// 应用入口
+import './core/app.js'
+

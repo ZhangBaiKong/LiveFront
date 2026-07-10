@@ -1,0 +1,13 @@
+node_modules/
+dist/
+out/
+.DS_Store
+*.log
+.livefront/
+release-output/
+build-output/
+dist-output/
+dist-*/
+release-*/
+Thumbs.db
+release/

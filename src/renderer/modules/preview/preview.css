@@ -1,0 +1,144 @@
+/* LiveFront Preview 模块样式 */
+
+/* ── 预览容器 ── */
+.preview-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* ── 预览工具栏 ── */
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  flex-shrink: 0;
+}
+.preview-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.preview-toolbar-center {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preview-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── 设备切换按钮 ── */
+.device-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: all 80ms ease;
+  cursor: pointer;
+}
+.device-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+.device-btn.active {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+/* ── 工具栏按钮 ── */
+.preview-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: all 80ms ease;
+  cursor: pointer;
+}
+.preview-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* ── WebView 区域 ── */
+.preview-webview-area {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 0;
+  background: #1a1a1a;
+  padding: 8px;
+}
+.preview-webview-wrapper {
+  display: flex;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+.preview-webview-wrapper webview {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── 加载指示器 ── */
+.preview-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  animation: preview-loading 1s ease infinite;
+  opacity: 0;
+  z-index: 10;
+}
+.preview-loading.active {
+  opacity: 1;
+}
+@keyframes preview-loading {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(1); transform-origin: left; }
+  51% { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+/* ── 空状态 ── */
+.preview-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  gap: 8px;
+  font-size: 13px;
+}
+.preview-empty-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}

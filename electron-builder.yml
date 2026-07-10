@@ -1,0 +1,76 @@
+﻿appId: com.livefront.app
+productName: LiveFront
+copyright: Copyright 婕?2024 LiveFront
+
+directories:
+  buildResources: resources
+  output: dist-v3
+
+files:
+  - out/**/*
+  - "!out/**/*.map"
+  - "!node_modules/**/{test,tests,__tests__}/**"
+  - "!node_modules/**/*.{md,txt}"
+
+extraResources:
+  - from: src/preload
+    to: preload
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icon.ico
+  signAndEditExecutable: false
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: resources/icon.icns
+  category: public.app-category.developer-tools
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: resources/icon.png
+  category: Development
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: LiveFront
+  deleteAppDataOnUninstall: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  installerHeaderIcon: resources/icon.ico
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+appImage:
+  artifactName: LiveFront-${version}.AppImage
+
+compression: maximum
+asar: true
+
+npmRebuild: false

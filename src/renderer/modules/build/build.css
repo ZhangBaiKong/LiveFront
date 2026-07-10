@@ -1,0 +1,28 @@
+/* LiveFront Build CSS */
+
+/* Toast notification */
+@keyframes buildToastIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.build-toast {
+  position: fixed;
+  top: 48px;
+  right: 20px;
+  z-index: 99999;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  max-width: 420px;
+  line-height: 1.5;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+}
+
+.build-toast-info    { background: #4a6cf7; }
+.build-toast-success { background: #34d399; }
+.build-toast-error   { background: #f87171; }
+.build-toast-warn    { background: #fbbf24; }
