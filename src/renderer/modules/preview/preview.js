@@ -1,5 +1,6 @@
 ﻿/* LiveFront Preview Manager */
 window.LiveFront = window.LiveFront || {};
+const __vueRuntimeCache = new Map();
 
 class PreviewManager {
   constructor() {
@@ -726,7 +727,12 @@ class PreviewManager {
     const overlayScript = this._getInjectedOverlayScript()
     const styles = allStyles.filter(Boolean).map(s => '<style>' + s + '</style>').join('\n')
 
-    const vueRuntimeCode = await this._fetchVueRuntime()
+    let vueRuntimeCode = __vueRuntimeCache.get('vue3') || sessionStorage.getItem('lf_vue_runtime_cache');
+      if (!vueRuntimeCode) {
+        vueRuntimeCode = await this._fetchVueRuntime();
+        try { sessionStorage.setItem('lf_vue_runtime_cache', vueRuntimeCode); } catch {}
+        __vueRuntimeCache.set('vue3', vueRuntimeCode);
+      }
 
     return [
       '<!DOCTYPE html>',

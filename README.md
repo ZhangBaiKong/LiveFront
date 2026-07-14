@@ -183,6 +183,40 @@ v4.0（2027+）
 
 ---
 
+
+---
+
+## LiveFront Bridge 浏览器插件
+
+LiveFront Bridge 是一个 Chrome 浏览器插件，让你在网页版 AI（ChatGPT、Claude、豆包）中自动发送修改摘要。
+
+### 安装
+
+1. 打开 Chrome 浏览器，访问 `chrome://extensions/`
+2. 打开右上角「开发者模式」
+3. 点击「加载已解压的扩展程序」
+4. 选择 LiveFront 项目中的 `chrome-extension/` 目录
+5. 插件安装完成，会在工具栏显示 LiveFront 图标
+
+### 使用
+
+1. 确保 LiveFront 桌面端正在运行
+2. 打开 ChatGPT 或 Claude 网页
+3. 插件会自动连接 LiveFront（右下角蓝色小圆点表示已连接）
+4. 在 LiveFront 中修改代码后，点击「发回AI」→ 选择对应平台
+5. 插件自动填入修改摘要并发送
+
+### 工作原理
+
+```
+LiveFront 桌面端 (WebSocket :9527)
+        ↕
+Chrome 浏览器插件 (background.js)
+        ↕
+AI 网页 (content.js → 填入输入框 → 点击发送)
+```
+
+如果插件未安装，LiveFront 会自动回退到「复制剪贴板 + 打开URL」的半自动模式。
 ---
 
 ## 快速开始

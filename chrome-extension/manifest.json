@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "LiveFront Bridge",
+  "version": "0.1.0",
+  "description": "?? LiveFront ??????? AI?????????",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://doubao.com/*",
+        "https://aistudio.xiaomimimo.com/*",
+        "https://*.xiaomimimo.com/*",
+        "https://kimi.moonshot.cn/*",
+        "https://tongyi.aliyun.com/*",
+        "https://qwen.aliyun.com/*",
+        "https://yiyan.baidu.com/*",
+        "https://chat.deepseek.com/*",
+        "https://gemini.google.com/*",
+        "https://perplexity.ai/*",
+        "https://v0.dev/*",
+        "https://bolt.new/*",
+        "https://lovable.dev/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": []
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LiveFront Bridge"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

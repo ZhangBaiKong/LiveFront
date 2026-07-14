@@ -1,4 +1,4 @@
-/* LiveFront ModLine — 修改线管理 */
+﻿/* LiveFront ModLine — 修改线管理 */
 (function () {
   // ============ 快照栈 ============
   const SnapshotStack = {
@@ -233,6 +233,213 @@
     // 刷新预览
     LiveFront.Preview?.refresh()
   }
+
+  // ============ Summary & Send-to-Dialog ============
+  function generateModlineSummary() {
+    const tags = ModStore.getTags()
+    const projectPath = LiveFront.state.currentProjectPath
+    const projectName = projectPath ? projectPath.split(/[\/\\]/).pop() : 'current project'
+    const openFiles = LiveFront.Editor?.getOpenFiles() || []
+    const activePath = LiveFront.Editor?.getActivePath()
+    const timestamp = new Date().toLocaleString('zh-CN')
+
+    const changed = tags.filter(t => t.status === 'applied' || t.status === 'done')
+    const pending = tags.filter(t => t.status === 'pending')
+
+    const lines = []
+    lines.push('\u524d\u7aef\u4fee\u6539\u8be6\u60c5\uff1a')
+    lines.push('\u9879\u76ee\uff1a' + projectName)
+    lines.push('\u65f6\u95f4\uff1a' + timestamp)
+    lines.push('')
+
+    // Group by file
+    const fileGroups = new Map()
+    for (const tag of tags) {
+      const filePath = tag.bindFilePath || activePath || ''
+      const fileName = filePath ? filePath.split(/[\/\\]/).pop() : (openFiles[0]?.name || 'unknown')
+      if (!fileGroups.has(fileName)) fileGroups.set(fileName, [])
+      fileGroups.get(fileName).push(tag)
+    }
+
+    lines.push('\u4fee\u6539\u7684\u6587\u4ef6\u548c\u5143\u7d20\uff1a')
+    let fileIndex = 1
+    for (const [fileName, fileTags] of fileGroups) {
+      lines.push(fileIndex + '. \u6587\u4ef6\uff1a' + fileName)
+      for (const tag of fileTags) {
+        let desc = '   - '
+        if (tag.bindSelector) desc += tag.bindSelector + ': '
+        desc += tag.label
+        if (tag.detail) desc += ' (' + tag.detail + ')'
+        lines.push(desc)
+      }
+      fileIndex++
+    }
+    lines.push('')
+
+    const effects = tags.filter(t => t.source === 'effect')
+    if (effects.length > 0) {
+      lines.push('\u65b0\u589e\u6548\u679c\uff1a')
+      for (const tag of effects) {
+        lines.push('- ' + (tag.bindSelector || '') + ': ' + tag.label)
+      }
+      lines.push('')
+    }
+
+    lines.push('\u4fee\u6539\u7ebf\u8bb0\u5f55\uff1a')
+    for (const tag of tags) {
+      const s = (tag.status === 'applied' || tag.status === 'done') ? '\u5df2\u5e94\u7528' : '\u5f85\u5904\u7406'
+      lines.push('- [' + s + '] ' + tag.label)
+    }
+    lines.push('')
+    lines.push('\u5f53\u524d\u4ee3\u7801\u5df2\u4fdd\u5b58\u3002')
+    lines.push('')
+    lines.push('\u8bf7\u57fa\u4e8e\u4ee5\u4e0a\u4fee\u6539\u7ee7\u7eed\u5f00\u53d1\u3002')
+    return lines.join('\n')
+  }
+
+  function copyModlineSummary() {
+    const summary = generateModlineSummary()
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(summary)
+    }
+    return summary
+  }
+
+  function getSavedDialogOptions() {
+    try {
+      const raw = localStorage.getItem('livefront_settings')
+      if (!raw) return []
+      const settings = JSON.parse(raw)
+      return Array.isArray(settings.dialogs) ? settings.dialogs : []
+    } catch (e) { return [] }
+  }
+
+  async function getMcpServerOptions() {
+    try {
+      const servers = await LiveFront.Services.mcp.listConnectedServers();
+      return Array.isArray(servers) ? servers : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function classifyMcpError(error) {
+    const code = error?.code || '';
+    const message = error?.message || '';
+    if (code === 'SERVER_NOT_FOUND' || '未找到 MCP Server' in message) return '服务器不存在';
+    if (code === 'SERVER_DISCONNECTED' || '未连接' in message) return '服务器未连接';
+    if (code === 'TIMEOUT' || /timeout|timed out/i.test(message)) return '连接超时';
+    if (code === 'TOOL_NOT_FOUND' || /not found|unknown tool/i.test(message)) return '工具不存在';
+    if (code === 'INVALID_PARAMS' || /invalid|missing|required/i.test(message)) return '参数错误';
+    if (/ECONNREFUSED|fetch failed|NetworkError/i.test(message)) return '网络不可达';
+    return message || '未知错误';
+  }
+
+  async function sendSummaryToMcpServer(serverName) {
+    const summary = generateModlineSummary();
+    if (!summary) return;
+    const doCall = async () => LiveFront.Services.mcp.callRemoteTool(serverName, 'livefront.apply-modification-summary', { summary });
+    try {
+      const result = await doCall();
+      _showToast('✅ 已通过 MCP 发送到 ' + serverName);
+      return result;
+    } catch (error) {
+      const friendly = classifyMcpError(error);
+      _showToastWithAction('MCP 发送失败: ' + friendly, '重试', async () => {
+        try {
+          const result = await doCall();
+          _showToast('✅ 重试成功：' + serverName);
+          return result;
+        } catch (retryError) {
+          _showToast('重试失败: ' + classifyMcpError(retryError));
+        }
+      });
+      throw error;
+    }
+  }
+
+  async function sendSummaryToDialog(dialog) {
+    const summary = generateModlineSummary()
+    if (!dialog) return
+
+    // --- LiveFront Bridge: try WebSocket auto-send for web AI platforms ---
+    const webPlatforms = { "chatgpt": "chatgpt", "claude-web": "claude", "doubao-web": "doubao" }
+    const bridgeTarget = webPlatforms[dialog.type]
+
+    if (bridgeTarget && LiveFront.Services?.bridge) {
+      try {
+        const conn = await LiveFront.Services.bridge.isConnected()
+        if (conn && conn.connected) {
+          const result = await LiveFront.Services.bridge.sendToExtension(summary, bridgeTarget)
+          if (result && result.success) {
+            _showToast("✅ 已自动发送到 " + (dialog.name || dialog.type))
+            LiveFront.EventBus.emit("modline:send-to-dialog", {
+              dialogId: dialog.id, dialogName: dialog.name || dialog.type || "dialog",
+              identifier: dialog.identifier || "", summary
+            })
+            return
+          }
+        }
+      } catch (e) {
+        console.log("[ModLine] Bridge not available, falling back:", e.message)
+      }
+      // Bridge not connected — fallback to clipboard + open URL
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(summary)
+      }
+      if (dialog.identifier) {
+        LiveFront.ipc.invoke("shell:open-external", dialog.identifier)
+      }
+      _showToastWithAction(
+        "📋 摘要已复制（浏览器插件未连接），请手动粘贴",
+        "打开页面",
+        () => { if (dialog.identifier) LiveFront.ipc.invoke("shell:open-external", dialog.identifier) }
+      )
+      LiveFront.EventBus.emit("modline:send-to-dialog", {
+        dialogId: dialog.id, dialogName: dialog.name || dialog.type || "dialog",
+        identifier: dialog.identifier || "", summary
+      })
+      return
+    }
+    // --- End LiveFront Bridge ---
+
+    if (dialog.type === 'codex' || dialog.type === 'claude-web') {
+      const command = dialog.identifier || (dialog.type === 'codex' ? 'codex' : 'claude')
+      try {
+        const result = await LiveFront.ipc.invoke('ai:send-to-cli', { command, summary })
+        if (result && result.success) {
+          _showToast('Sent to ' + (dialog.name || dialog.type))
+        } else {
+          _showToast('CLI send failed: ' + (result ? result.error : 'unknown'))
+        }
+      } catch (err) {
+        _showToast('CLI send failed: ' + err.message)
+      }
+    } else if (dialog.type === 'chatgpt' || dialog.type === 'doubao-web' || dialog.type === 'other') {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(summary)
+      }
+      if (dialog.identifier) {
+        LiveFront.ipc.invoke('shell:open-external', dialog.identifier)
+      }
+      _showToast('Summary copied, paste into ' + (dialog.name || dialog.type))
+    } else if (dialog.type === 'mcp') {
+      await sendSummaryToMcpServer(dialog.identifier);
+    } else {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(summary)
+      }
+      _showToast('Summary copied to clipboard')
+    }
+
+    LiveFront.EventBus.emit('modline:send-to-dialog', {
+      dialogId: dialog.id,
+      dialogName: dialog.name || dialog.type || 'dialog',
+      identifier: dialog.identifier || '',
+      summary
+    })
+  }
+
 
   function _showToastWithAction(msg, actionLabel, actionCallback) {
     let toast = document.getElementById('modlineToast')
@@ -848,7 +1055,14 @@
           <div class="modline-header-right">
             <span class="modline-mode-label" id="modlineModeLabel" title="点击切换模式">全部发送</span>
             <button class="modline-send-btn" id="modlineSendBtn" disabled>发送修改</button>
+            <button class="modline-copy-btn" id="modlineCopyBtn" title="复制摘要">📋 复制摘要</button>
+            <div class="modline-sendback-wrap" id="modlineSendbackWrap">
+              <button class="modline-sendback-btn" id="modlineSendbackBtn">📤 发回AI ▾</button>
+              <div class="modline-sendback-menu" id="modlineSendbackMenu"></div>
+            </div>
           </div>
+        </div>
+        <div class="modline-ai-hint"          </div>
         </div>
         <div class="modline-ai-hint" id="modlineAIHint" style="display:none;">
           <span>💡 配置 AI 后可使用发送修改功能</span>
@@ -864,10 +1078,61 @@
 
       // 事件绑定
       const sendBtn = document.getElementById('modlineSendBtn')
+      const copyBtn = document.getElementById('modlineCopyBtn')
+      const sendbackBtn = document.getElementById('modlineSendbackBtn')
+      const sendbackMenu = document.getElementById('modlineSendbackMenu')
       const modeLabel = document.getElementById('modlineModeLabel')
       const hintBtn = document.getElementById('modlineAIHintBtn')
 
       sendBtn?.addEventListener('click', () => ModStore.sendModifications())
+
+      copyBtn?.addEventListener('click', () => {
+        copyModlineSummary()
+        _showToast('\u2705 \u4fee\u6539\u6458\u8981\u5df2\u590d\u5236\u5230\u526a\u8d34\u677f')
+      })
+
+      function renderSendbackMenu() {
+        if (!sendbackMenu) return
+        const options = getSavedDialogOptions()
+        const icons = { codex: '\U0001f4bb', chatgpt: '\U0001f916', 'claude-web': '\U0001f9e0', 'doubao-web': '\U0001f36b', mcp: '\U0001f4ac', other: '\U0001f4ac' }
+        let html = options.map(function(d) {
+          return '<div class="modline-sendback-item" data-id="' + d.id + '">' +
+            '<span class="modline-sendback-icon">' + (icons[d.type] || icons.other) + '</span>' +
+            '<span>' + (d.name || d.type || 'dialog') + '</span></div>'
+        }).join('')
+        html += '<div class="modline-sendback-item modline-sendback-config" data-id="__config__"><span>\u2699\ufe0f \u914d\u7f6e\u5176\u4ed6AI...</span></div>'
+        sendbackMenu.innerHTML = html
+      }
+
+      sendbackBtn?.addEventListener('click', function(e) {
+        e.stopPropagation()
+        renderSendbackMenu()
+        sendbackMenu.style.display = sendbackMenu.style.display === 'block' ? 'none' : 'block'
+      })
+
+      sendbackMenu?.addEventListener('click', async function(e) {
+        var item = e.target.closest('.modline-sendback-item')
+        if (!item) return
+        sendbackMenu.style.display = 'none'
+        var id = item.dataset.id
+        if (id === '__config__') {
+          LiveFront.Commands.execute('settings.open', { section: 'dialogs' })
+          return
+        }
+        var options = getSavedDialogOptions()
+        var dialog = options.find(function(d) { return d.id === id })
+        if (dialog) await sendSummaryToDialog(dialog)
+      })
+
+      document.addEventListener('click', function(e) {
+        if (!sendbackMenu) return
+        var wrap = document.getElementById('modlineSendbackWrap')
+        if (wrap && !wrap.contains(e.target)) sendbackMenu.style.display = 'none'
+      })
+
+      LiveFront.EventBus.on('settings:changed', function() {
+        if (sendbackMenu && sendbackMenu.style.display === 'block') renderSendbackMenu()
+      })
 
       modeLabel?.addEventListener('click', () => {
         if (ModStore._sendMode === 'batch') {
@@ -896,4 +1161,5 @@
   // 暴露全局 API
   window.LiveFront.ModStore = ModStore
   window.LiveFront.SnapshotStack = SnapshotStack
+  window.LiveFront.ModSummary = { generate: generateModlineSummary, copy: copyModlineSummary, sendToDialog: sendSummaryToDialog }
 })()

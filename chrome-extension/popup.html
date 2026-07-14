@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+    <div class="header">
+      <span class="logo">⚡</span>
+      <h1>LiveFront Bridge</h1>
+    </div>
+    <div class="status" id="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">检测连接中...</span>
+    </div>
+    <div class="actions">
+      <button id="reconnectBtn" class="btn btn-secondary">重新连接</button>
+    </div>
+    <div class="platform" id="platformInfo">
+      <span>当前页面：</span>
+      <span id="platformName">-</span>
+    </div>
+    <div class="footer">
+      <a href="https://github.com/ZhangBaiKong/LiveFront" target="_blank">GitHub</a>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

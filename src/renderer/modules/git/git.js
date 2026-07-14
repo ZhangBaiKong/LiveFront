@@ -660,7 +660,7 @@
 
     // 动态导入 Monaco
     try {
-      const monaco = await import('monaco-editor/esm/vs/editor/editor.main.js')
+      const monaco = await import('monaco-editor/esm/vs/editor/editor.api')
 
       // 获取 Diff 数据
       const api = gitApi()

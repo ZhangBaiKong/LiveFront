@@ -84,6 +84,74 @@ LiveFront.Services = {
       if (r.length > 10) r = r.slice(0, 10);
       LiveFront.Storage.set('recentProjects', r);
     }
+  },
+  mcp: {
+    async startServer(port) {
+      return window.api.mcp.startServer(port);
+    },
+    async stopServer() {
+      return window.api.mcp.stopServer();
+    },
+    async getTools() {
+      return window.api.mcp.getTools();
+    },
+    async callTool(tool, args) {
+      return window.api.mcp.callTool(tool, args);
+    },
+    async getConfig() {
+      return window.api.mcp.getConfig();
+    },
+    async connectServer(config) {
+      return window.api.mcp.connectServer(config);
+    },
+    async disconnectServer(name) {
+      return window.api.mcp.disconnectServer(name);
+    },
+    async listConnectedServers() {
+      return window.api.mcp.listConnectedServers();
+    },
+    async listRemoteTools(name) {
+      try {
+        return await window.api.mcp.listRemoteTools(name);
+      } catch (error) {
+        const wrapped = new Error(error?.message || '刷新 MCP 工具失败');
+        wrapped.code = error?.code || 'MCP_LIST_FAILED';
+        wrapped.original = error;
+        throw wrapped;
+      }
+    },
+    async callRemoteTool(serverName, tool, args) {
+      try {
+        return await window.api.mcp.callRemoteTool(serverName, tool, args);
+      } catch (error) {
+        const code = error?.code || 'MCP_CALL_FAILED';
+        const message = error?.message || 'MCP 调用失败';
+        const wrapped = new Error(message);
+        wrapped.code = code;
+        wrapped.original = error;
+        throw wrapped;
+      }
+    },
+    async importFromClaudeDesktop(configPath) {
+      return window.api.mcp.importFromClaudeDesktop(configPath);
+    },
+    async importFromCursor(configPath) {
+      return window.api.mcp.importFromCursor(configPath);
+    },
+    onClientsChanged(cb) {
+      if (window.api?.mcp?.onClientsChanged) return window.api.mcp.onClientsChanged(cb);
+    }
+  },
+  agent: {
+    async scan() {
+      return window.api.agent.scan();
+    },
+    async getConfig(name) {
+      return window.api.agent.getConfig(name);
+    },
+    async saveConfig(name, config) {
+      return window.api.agent.saveConfig(name, config);
+    }
   }
 };
 
@@ -106,3 +174,65 @@ LiveFront.Services.framework = {
   }
 }
 
+
+LiveFront.Services.codeBridge = {
+  async importFromClipboard() {
+    const text = await navigator.clipboard.readText()
+    if (!text) return { imported: false, reason: 'clipboard_empty' }
+    const guess = guessFilenameFromCode(text)
+    const projectPath = LiveFront.state.currentProjectPath
+    if (!projectPath) return { imported: false, reason: 'no_project' }
+    const filePath = await LiveFront.Services.fileSystem.createFile(projectPath + '/' + guess.filename, text)
+    return { imported: true, filePath, filename: guess.filename, language: guess.language }
+  },
+  async importFromFolder(folderPath) {
+    if (!folderPath) return { imported: false, reason: 'no_folder' }
+    const exists = await LiveFront.Services.fileSystem.exists(folderPath)
+    if (!exists) return { imported: false, reason: 'folder_missing' }
+    return { imported: true, folderPath }
+  },
+  async importFromAPI(code, filename, source, project) {
+    if (!code) return { imported: false, reason: 'empty_code' }
+    const projectPath = project || LiveFront.state.currentProjectPath
+    if (!projectPath) return { imported: false, reason: 'no_project' }
+    const safeName = filename || guessFilenameFromCode(code).filename
+    const filePath = await LiveFront.Services.fileSystem.createFile(projectPath + '/' + safeName, code)
+    return { imported: true, filePath, filename: safeName, source: source || 'api' }
+  },
+  async importFromDragDrop(fileList) {
+    const results = []
+    for (const file of fileList || []) {
+      const text = await file.text()
+      const projectPath = LiveFront.state.currentProjectPath
+      if (!projectPath) {
+        results.push({ filename: file.name, imported: false, reason: 'no_project' })
+        continue
+      }
+      const filePath = await LiveFront.Services.fileSystem.createFile(projectPath + '/' + file.name, text)
+      results.push({ filename: file.name, imported: true, filePath })
+    }
+    return results
+  }
+}
+
+function guessFilenameFromCode(code) {
+  const trimmed = (code || '').trim()
+  if (trimmed.startsWith('<')) return { filename: 'clipboard.html', language: 'html' }
+  if (trimmed.includes('export default') || trimmed.includes('import ') || trimmed.includes('function ')) return { filename: 'clipboard.js', language: 'javascript' }
+  return { filename: 'clipboard.txt', language: 'plaintext' }
+}
+
+LiveFront.Services.bridge = {
+  sendToExtension(summary, target) {
+    if (window.api?.bridge?.sendToExtension) {
+      return window.api.bridge.sendToExtension(summary, target);
+    }
+    return Promise.resolve({ success: false, error: 'bridge not available' });
+  },
+  isConnected() {
+    if (window.api?.bridge?.isConnected) {
+      return window.api.bridge.isConnected();
+    }
+    return Promise.resolve({ connected: false });
+  }
+};

@@ -1,0 +1,3 @@
+export default {
+  "css": ".bg-dot-pattern {\n  background-color: #f8fafc;\n  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);\n  background-size: 24px 24px;\n  min-height: 100vh;\n}\n\n/* 大圆点 */\n.bg-dot-large {\n  background-color: #f1f5f9;\n  background-image: radial-gradient(circle, #94a3b8 2px, transparent 2px);\n  background-size: 40px 40px;\n  min-height: 100vh;\n}\n\n/* 彩色圆点 */\n.bg-dot-colorful {\n  background-color: #fafafa;\n  background-image:\n    radial-gradient(circle, #3b82f6 1px, transparent 1px),\n    radial-gradient(circle, #ec4899 1px, transparent 1px);\n  background-size: 30px 30px, 30px 30px;\n  background-position: 0 0, 15px 15px;\n  min-height: 100vh;\n}"
+};

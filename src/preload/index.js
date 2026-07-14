@@ -73,6 +73,7 @@ const api = {
     request: (params) => ipcRenderer.invoke('ai:request', params),
     streamRequest: (params) => ipcRenderer.invoke('ai:stream-request', params),
     cancelStream: (termId) => ipcRenderer.send('ai:stream-cancel', { termId }),
+    sendToCli: (params) => ipcRenderer.invoke('ai:send-to-cli', params),
     onStreamChunk: (callback) => {
       const handler = (_e, data) => callback(data)
       ipcRenderer.on('ai:stream-chunk', handler)
@@ -114,6 +115,35 @@ const api = {
 
   project: {
     exportZip: (opts) => ipcRenderer.invoke('project:export-zip', opts)
+  },
+
+  bridge: {
+    sendToExtension: (summary, target) => ipcRenderer.invoke('bridge:send-to-extension', { summary, target }),
+    isConnected: () => ipcRenderer.invoke('bridge:is-connected')
+  },
+  agent: {
+    scan: () => ipcRenderer.invoke('agent:scan'),
+    getConfig: (agentName) => ipcRenderer.invoke('agent:get-config', agentName),
+    saveConfig: (agentName, config) => ipcRenderer.invoke('agent:save-config', { agentName, config })
+  },
+  mcp: {
+    startServer: (port) => ipcRenderer.invoke('mcp:start-server', port),
+    stopServer: () => ipcRenderer.invoke('mcp:stop-server'),
+    getTools: () => ipcRenderer.invoke('mcp:get-tools'),
+    callTool: (tool, args) => ipcRenderer.invoke('mcp:call-tool', { tool, args }),
+    getConfig: () => ipcRenderer.invoke('mcp:get-config'),
+    connectServer: (config) => ipcRenderer.invoke('mcp:connect-server', config),
+    disconnectServer: (name) => ipcRenderer.invoke('mcp:disconnect-server', name),
+    listConnectedServers: () => ipcRenderer.invoke('mcp:list-connected-servers'),
+    listRemoteTools: (name) => ipcRenderer.invoke('mcp:list-remote-tools', name),
+    callRemoteTool: (serverName, tool, args) => ipcRenderer.invoke('mcp:call-remote-tool', { serverName, tool, args }),
+    importFromClaudeDesktop: (configPath) => ipcRenderer.invoke('mcp:import-claude-desktop', configPath),
+    importFromCursor: (configPath) => ipcRenderer.invoke('mcp:import-cursor', configPath),
+    onClientsChanged: (callback) => {
+      const handler = (_e, data) => callback(data)
+      ipcRenderer.on('mcp:clients-changed', handler)
+      return () => ipcRenderer.removeListener('mcp:clients-changed', handler)
+    }
   }
 }
 
@@ -135,4 +165,3 @@ if (process.contextIsolated) {
   window.electron = { ipcRenderer }
   window.api = api
 }
-

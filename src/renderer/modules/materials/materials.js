@@ -3,6 +3,25 @@
   window.LiveFront = window.LiveFront || {};
 
   let _overlay = null;
+  const DEFAULT_PREVIEW_COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444','#0ea5e9','#a855f7'];
+  const _materialCodeCache = new Map();
+  async function loadMaterialCode(material) {
+    try {
+      if (material.code) return material.code;
+      if (_materialCodeCache.has(material.id)) {
+        material.code = _materialCodeCache.get(material.id);
+        return material.code;
+      }
+      const mod = await import('./materials-code/' + material.id + '.js');
+      const code = mod?.default || {};
+      _materialCodeCache.set(material.id, code);
+      material.code = code;
+      return code;
+    } catch (e) {
+      console.warn('[Materials] load code failed:', material.id, e);
+      return {};
+    }
+  }
   let _currentCategory = '全部';
   let _searchQuery = '';
   let _currentView = 'grid';
@@ -60,10 +79,11 @@
       case 'text':
         return '<div class="materials-preview-text" style="font-family:' + (material.fontFamily || 'inherit') + '">LiveFront 预览</div>';
       case 'color-swatch': {
-        const colors = _getPreviewColors(material.code.variables);
-        if (colors.length === 0 && material.code.css) {
-          const matches = material.code.css.match(/#[0-9a-fA-F]{3,8}/g) || [];
+        const colors = _getPreviewColors(material.code?.variables) || [];
+        if (colors.length === 0 && material.code?.css) {
+          const matches = material.code?.css?.match(/#[0-9a-fA-F]{3,8}/g) || [];
           const swatches = matches.slice(0, 6);
+          if (!swatches.length) swatches.push(...DEFAULT_PREVIEW_COLORS);
           return '<div class="materials-preview-colors">' +
             swatches.map(c => '<div class="materials-preview-color" style="background:' + c + '"></div>').join('') +
             '</div>';
@@ -73,11 +93,11 @@
           '</div>';
       }
       case 'code-block':
-        if (material.code.html) {
-          return '<div class="materials-preview-code">' + _escapeHtml(material.code.html.substring(0, 200)) + '</div>';
+        if (material.code?.html) {
+          return '<div class="materials-preview-code">' + _escapeHtml(material.code?.html.substring(0, 200)) + '</div>';
         }
-        if (material.code.css) {
-          return '<div class="materials-preview-code">' + _escapeHtml(material.code.css.substring(0, 200)) + '</div>';
+        if (material.code?.css) {
+          return '<div class="materials-preview-code">' + _escapeHtml(material.code?.css.substring(0, 200)) + '</div>';
         }
         return '<div class="materials-preview-code">...</div>';
       case 'image':
@@ -131,10 +151,11 @@
       case 'text':
         return '<div class="materials-preview-text" style="font-family:' + (material.fontFamily || 'inherit') + ';font-size:42px;">LiveFront 素材库预览文字<br>Aa Bb Cc 0123456789</div>';
       case 'color-swatch': {
-        const colors = _getPreviewColors(material.code.variables);
-        if (colors.length === 0 && material.code.css) {
-          const matches = material.code.css.match(/#[0-9a-fA-F]{3,8}/g) || [];
+        const colors = _getPreviewColors(material.code?.variables);
+        if (colors.length === 0 && material.code?.css) {
+          const matches = material.code?.css.match(/#[0-9a-fA-F]{3,8}/g) || [];
           const swatches = matches.slice(0, 8);
+          if (!swatches.length) swatches.push(...DEFAULT_PREVIEW_COLORS);
           return '<div class="materials-preview-colors" style="gap:10px">' +
             swatches.map(c => '<div class="materials-preview-color" style="width:56px;height:56px;border-radius:8px;background:' + c + '"></div>').join('') +
             '</div>';
@@ -144,17 +165,7 @@
           '</div>';
       }
       case 'code-block':
-        if (material.code.html) {
-          try {
-            return '<div style="width:100%;min-height:200px;background:white;border-radius:8px;padding:16px;overflow:auto;">' + material.code.html + '</div>';
-          } catch (e) {
-            return '<div class="materials-preview-code" style="max-height:200px">' + _escapeHtml(material.code.html) + '</div>';
-          }
-        }
-        if (material.code.css) {
-          return '<div style="width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;">背景预览</div>';
-        }
-        return '';
+        return '<div class="materials-preview-code">代码预览按需加载</div>';
       default:
         return '';
     }
@@ -162,15 +173,10 @@
 
   function _renderCodeBlocks(material) {
     let html = '';
-    if (material.code.css) {
-      html += '<div class="materials-code-section"><div class="materials-code-title">CSS 代码</div><div class="materials-code-block"><pre>' + _highlightCode(material.code.css) + '</pre></div></div>';
+    if (material.code?.css) {
+      html += '<div class="materials-code-section"><div class="materials-code-title">CSS 代码</div><div class="materials-code-block"><pre>' + _highlightCode(material.code?.css) + '</pre></div></div>';
     }
-    if (material.code.html) {
-      html += '<div class="materials-code-section"><div class="materials-code-title">HTML 代码</div><div class="materials-code-block"><pre>' + _highlightCode(material.code.html) + '</pre></div></div>';
-    }
-    if (material.code.js) {
-      html += '<div class="materials-code-section"><div class="materials-code-title">JavaScript 代码</div><div class="materials-code-block"><pre>' + _highlightCode(material.code.js) + '</pre></div></div>';
-    }
+    /* preview code blocks are lazy loaded */
     return html;
   }
 
@@ -223,11 +229,13 @@
       _renderGrid();
     });
 
-    document.getElementById('materialsApply').addEventListener('click', () => {
+    document.getElementById('materialsApply').addEventListener('click', async () => {
+      try { await loadMaterialCode(material); } catch {}
       LiveFront.MaterialApply.applyMaterial(material);
     });
 
-    document.getElementById('materialsCopy').addEventListener('click', () => {
+    document.getElementById('materialsCopy').addEventListener('click', async () => {
+      try { await loadMaterialCode(material); } catch {}
       LiveFront.MaterialApply.copyCode(material);
     });
 

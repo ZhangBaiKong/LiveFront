@@ -1,5 +1,5 @@
 /* LiveFront Editor — Monaco 编辑器核心管理器 */
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 
 // 文件扩展名 → Monaco 语言映射
 const LANG_MAP = {

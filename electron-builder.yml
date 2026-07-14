@@ -9,6 +9,15 @@ directories:
 files:
   - out/**/*
   - "!out/**/*.map"
+  - "!docs/**/*"
+  - "!src/**/*"
+  - "!backup/**/*"
+  - "!dist*/**/*"
+  - "!release/**/*"
+  - "!resources/**/*"
+  - "!test-project/**/*"
+  - "!test-react-project/**/*"
+  - "!test-vue-project/**/*"
   - "!node_modules/**/{test,tests,__tests__}/**"
   - "!node_modules/**/*.{md,txt}"
 
@@ -70,7 +79,7 @@ dmg:
 appImage:
   artifactName: LiveFront-${version}.AppImage
 
-compression: maximum
+compression: store
 asar: true
 
 npmRebuild: false

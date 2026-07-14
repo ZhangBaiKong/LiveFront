@@ -194,10 +194,11 @@ window.LiveFront = window.LiveFront || {};
     }
   }
 
-  function _showDropdown(anchorBtn, category) {
+  async function _showDropdown(anchorBtn, category) {
     _closeDropdown();
 
     const presets = LiveFront.EffectPresets.filter(p => p.category === category);
+    try { await Promise.all(presets.map(p => LiveFront.EffectPresets.loadCode(p.id))); } catch {}
     if (presets.length === 0) return;
 
     const dropdown = document.createElement('div');
@@ -252,13 +253,14 @@ window.LiveFront = window.LiveFront || {};
   }
 
   // ============ 应用预设效果 ============
-  function _applyPreset(preset) {
+  async function _applyPreset(preset) {
     const selData = _selectedElementData;
     if (!selData) return;
 
     const selector = selData.selector;
     if (!selector) return;
 
+    try { await LiveFront.EffectPresets.loadCode(preset.id); } catch {}
     const cssCode = preset.generateCSS(selector);
     const jsCode = preset.generateJS(selector);
 

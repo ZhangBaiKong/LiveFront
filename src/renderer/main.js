@@ -1,4 +1,4 @@
-/* LiveFront main entry */
+﻿/* LiveFront main entry */
 import './core/dom-utils.js'
 import './core/event-bus.js'
 import './core/storage.js'
@@ -14,7 +14,8 @@ import './core/panel-manager.js'
 import './core/module-registry.js'
 import './core/module-loader.js'
 
-// 功能模块
+// 鍔熻兘妯″潡
+import './modules/settings/index.js'
 import './modules/filetree/index.js'
 import './modules/editor/editor.js'
 import './modules/editor/tab-bar.js'
@@ -39,6 +40,7 @@ import './modules/build/index.js'
 import './modules/git/index.js'
 import './modules/git/git.js'
 
-// 应用入口
+// 搴旂敤鍏ュ彛
 import './core/app.js'
+
 

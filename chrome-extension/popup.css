@@ -1,0 +1,59 @@
+﻿body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  width: 280px;
+}
+.popup { padding: 16px; }
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.header h1 { margin: 0; font-size: 15px; font-weight: 600; }
+.logo { font-size: 20px; }
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #252528;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.connected { background: #34d399; box-shadow: 0 0 6px #34d399; }
+.status-dot.connecting { background: #fbbf24; animation: pulse 1s infinite; }
+.status-dot.disconnected { background: #ef4444; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.actions { margin-bottom: 12px; }
+.btn {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-secondary { background: #333; color: #e0e0e0; }
+.btn-secondary:hover { background: #444; }
+.platform {
+  padding: 8px 12px;
+  background: #252528;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.footer {
+  text-align: center;
+  font-size: 12px;
+}
+.footer a { color: #4a6cf7; text-decoration: none; }

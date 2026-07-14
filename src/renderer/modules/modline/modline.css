@@ -1,4 +1,4 @@
-/* LiveFront ModLine — 修改线 CSS */
+﻿/* LiveFront ModLine 鈥?淇敼绾?CSS */
 .modline-container {
   min-height: 80px;
   display: flex;
@@ -11,7 +11,7 @@
   grid-column: 1 / -1;
 }
 
-/* —— 头部 —— */
+/* 鈥斺€?澶撮儴 鈥斺€?*/
 .modline-header {
   display: flex;
   align-items: center;
@@ -66,7 +66,7 @@
 }
 .modline-mode-label:hover { color: var(--text-secondary); }
 
-/* —— AI 配置提示条 —— */
+/* 鈥斺€?AI 閰嶇疆鎻愮ず鏉?鈥斺€?*/
 .modline-ai-hint {
   display: flex;
   align-items: center;
@@ -95,7 +95,7 @@
   color: #fff;
 }
 
-/* —— 标签轨道 —— */
+/* 鈥斺€?鏍囩杞ㄩ亾 鈥斺€?*/
 .modline-track {
   flex: 1;
   display: flex;
@@ -108,7 +108,7 @@
 }
 .modline-track::-webkit-scrollbar { display: none; }
 
-/* —— 连接线 —— */
+/* 鈥斺€?杩炴帴绾?鈥斺€?*/
 .modline-track::before {
   content: '';
   position: absolute;
@@ -120,7 +120,7 @@
   z-index: 0;
 }
 
-/* —— 标签 —— */
+/* 鈥斺€?鏍囩 鈥斺€?*/
 .modtag {
   display: flex;
   align-items: center;
@@ -143,7 +143,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* —— 拖拽状态 —— */
+/* 鈥斺€?鎷栨嫿鐘舵€?鈥斺€?*/
 .modtag-dragging {
   opacity: 0.4 !important;
   transform: scale(0.95);
@@ -153,7 +153,7 @@
   box-shadow: 0 0 0 2px var(--accent-muted);
 }
 
-/* —— 序号圆点 —— */
+/* 鈥斺€?搴忓彿鍦嗙偣 鈥斺€?*/
 .modtag-index {
   width: 22px;
   height: 22px;
@@ -178,7 +178,7 @@
   50% { opacity: 0.5; }
 }
 
-/* —— 标签内容 —— */
+/* 鈥斺€?鏍囩鍐呭 鈥斺€?*/
 .modtag-body {
   flex: 1;
   min-width: 0;
@@ -211,7 +211,7 @@
   font-size: 10px;
 }
 
-/* —— 删除按钮 —— */
+/* 鈥斺€?鍒犻櫎鎸夐挳 鈥斺€?*/
 .modtag-delete {
   width: 16px;
   height: 16px;
@@ -228,7 +228,7 @@
 .modtag:hover .modtag-delete { opacity: 1; }
 .modtag-delete:hover { background: var(--danger); color: #fff; }
 
-/* —— 添加按钮 —— */
+/* 鈥斺€?娣诲姞鎸夐挳 鈥斺€?*/
 .modtag-add {
   display: flex;
   align-items: center;
@@ -248,7 +248,7 @@
   color: var(--accent);
 }
 
-/* —— 空状态 —— */
+/* 鈥斺€?绌虹姸鎬?鈥斺€?*/
 .modline-empty {
   flex: 1;
   display: flex;
@@ -259,7 +259,7 @@
   gap: 4px;
 }
 
-/* —— 弹窗（添加/编辑） —— */
+/* 鈥斺€?寮圭獥锛堟坊鍔?缂栬緫锛?鈥斺€?*/
 .modline-dialog-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -321,7 +321,7 @@
   margin-top: 4px;
 }
 
-/* —— 内联编辑浮窗 —— */
+/* 鈥斺€?鍐呰仈缂栬緫娴獥 鈥斺€?*/
 .modline-inline-edit {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
@@ -371,7 +371,7 @@
   justify-content: flex-end;
 }
 
-/* —— Toast 提示 —— */
+/* 鈥斺€?Toast 鎻愮ず 鈥斺€?*/
 .modline-toast {
   position: fixed;
   bottom: 100px;
@@ -398,7 +398,7 @@
   pointer-events: auto;
 }
 
-/* —— 通用按钮样式（补充） —— */
+/* 鈥斺€?閫氱敤鎸夐挳鏍峰紡锛堣ˉ鍏咃級 鈥斺€?*/
 .btn {
   font-size: 11px;
   padding: 4px 14px;
@@ -423,7 +423,7 @@
   background: var(--accent-hover);
 }
 
-/* —— 进度提示条 —— */
+/* 鈥斺€?杩涘害鎻愮ず鏉?鈥斺€?*/
 .modline-progress {
   display: flex;
   align-items: center;
@@ -436,3 +436,69 @@
 }
 
 
+
+.modline-copy-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  background: transparent;
+  color: var(--text-secondary, #a1a1aa);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.modline-copy-btn:hover {
+  background: var(--bg-hover, rgba(255,255,255,0.06));
+  color: var(--text-primary, #f4f4f5);
+}
+.modline-sendback-wrap {
+  position: relative;
+}
+.modline-sendback-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent, #818cf8);
+  background: var(--accent-bg, rgba(99,102,241,0.12));
+  color: var(--accent, #818cf8);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.modline-sendback-btn:hover {
+  background: var(--accent-hover, rgba(99,102,241,0.24));
+}
+.modline-sendback-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 180px;
+  background: var(--bg-primary, #111119);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 1000;
+  overflow: hidden;
+}
+.modline-sendback-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-secondary, #d4d4d8);
+  cursor: pointer;
+}
+.modline-sendback-item:hover {
+  background: var(--bg-hover, rgba(255,255,255,0.06));
+  color: var(--text-primary, #f4f4f5);
+}
+.modline-sendback-config {
+  border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  color: var(--text-muted, #71717a);
+}
+.modline-sendback-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}

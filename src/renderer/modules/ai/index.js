@@ -618,15 +618,31 @@
 
       let html = '<h3>AI Model Settings</h3>'
 
+      // Quick-config presets
+      const PRESETS = [
+        { id: 'mimo', label: 'MiMo AI Studio', name: 'MiMo AI Studio', baseUrl: 'https://aistudio.xiaomimimo.com/v1', modelId: 'mimo-v2.5-pro' },
+        { id: 'deepseek', label: 'DeepSeek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1', modelId: 'deepseek-chat' },
+      ]
+
+      html += '<div style="margin-bottom:16px;">'
+        + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Quick Config</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+      for (const preset of PRESETS) {
+        html += '<button class="ai-preset-btn" data-preset="' + preset.id + '" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-secondary);cursor:pointer;font-size:12px;color:var(--text);transition:all 0.15s;">'
+          + preset.label + '</button>'
+      }
+      html += '</div></div>'
+
       // Add model form
+      html += '<div style="border-top:1px solid var(--border);padding-top:12px;">'
       html += '<div class="ai-settings-group">'
         + '<label>Name:</label>'
-        + '<input type="text" id="aiModelName" placeholder="e.g. My DeepSeek">'
+        + '<input type="text" id="aiModelName" placeholder="e.g. MiMo AI Studio">'
         + '</div>'
       html += '<div class="ai-settings-group">'
         + '<label>Base URL:</label>'
-        + '<input type="text" id="aiModelBaseUrl" placeholder="e.g. https://api.deepseek.com/v1/chat/completions">'
-        + '<div style="font-size:10px;color:var(--text-muted);">Full API endpoint URL</div>'
+        + '<input type="text" id="aiModelBaseUrl" placeholder="e.g. https://aistudio.xiaomimimo.com/v1">'
+        + '<div style="font-size:10px;color:var(--text-muted);">API endpoint (OpenAI compatible)</div>'
         + '</div>'
       html += '<div class="ai-settings-group">'
         + '<label>API Key:</label>'
@@ -635,12 +651,13 @@
         + '</div>'
       html += '<div class="ai-settings-group">'
         + '<label>Model ID:</label>'
-        + '<input type="text" id="aiModelId" placeholder="e.g. deepseek-chat, gpt-4o">'
+        + '<input type="text" id="aiModelId" placeholder="e.g. mimo-v2.5-pro, deepseek-chat">'
         + '</div>'
 
       html += '<div style="margin-top:12px;">'
         + '<button class="btn btn-primary" id="aiModelAdd" style="width:100%;">Add Model</button>'
         + '</div>'
+      html += '</div>'
 
       // Configured models list
       html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">'
@@ -665,6 +682,25 @@
 
       settings.innerHTML = html
       container.appendChild(settings)
+
+      // Preset quick-config buttons
+      settings.querySelectorAll('.ai-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const presetId = btn.dataset.preset
+          const preset = PRESETS.find(p => p.id === presetId)
+          if (!preset) return
+          settings.querySelector('#aiModelName').value = preset.name
+          settings.querySelector('#aiModelBaseUrl').value = preset.baseUrl
+          settings.querySelector('#aiModelId').value = preset.modelId
+          settings.querySelector('#aiModelApiKey').value = ''
+          settings.querySelector('#aiModelApiKey').focus()
+          // Highlight active preset
+          settings.querySelectorAll('.ai-preset-btn').forEach(b => {
+            b.style.borderColor = b.dataset.preset === presetId ? 'var(--primary)' : 'var(--border)'
+            b.style.background = b.dataset.preset === presetId ? 'var(--primary-dim, rgba(74,108,247,0.1))' : 'var(--bg-secondary)'
+          })
+        })
+      })
 
       // Add model
       settings.querySelector('#aiModelAdd')?.addEventListener('click', () => {
