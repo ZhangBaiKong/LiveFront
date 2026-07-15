@@ -1,5 +1,6 @@
-﻿/* LiveFront Vue runtime loader placeholder */
+﻿/* LiveFront Vue runtime loader */
 export async function loadVueRuntime() {
-  console.warn('[Preview] Local Vue runtime loader is a placeholder; Vue preview requires a bundled runtime to work offline.')
-  return 'console.error("Vue runtime not bundled");'
+  const Vue = await import('vue/dist/vue.global.js')
+  if (!globalThis.Vue) globalThis.Vue = Vue
+  return '/* Vue runtime loaded from local package */'
 }

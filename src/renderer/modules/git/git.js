@@ -2,7 +2,7 @@
 (function () {
   const { DOM, EventBus, Commands, PanelManager, Services, Layout, Storage } = LiveFront
 
-  // ============ 鐘舵€?============
+  // ============ 状态 ============
   const state = {
     projectPath: null,
     isRepo: false,
@@ -60,7 +60,7 @@
 
   LiveFront.GitManager = GitManager
 
-  // ============ 鍛戒护娉ㄥ唽 ============
+  // ============ 命令注册 ============
   function _registerCommands() {
     Commands.register('git.toggle', () => {
       const active = PanelManager.getActiveTab()
@@ -100,7 +100,7 @@
     })
   }
 
-  // ============ 闈㈡澘娉ㄥ唽 ============
+  // ============ 面板注册 ============
   function _registerPanel() {
     PanelManager.registerTab({
       id: 'git',
@@ -119,7 +119,7 @@
     })
   }
 
-  // ============ 浜嬩欢璁㈤槄 ============
+  // ============ 事件订阅 ============
   function _subscribeEvents() {
     EventBus.on('project:opened', (data) => {
       const p = data?.path || data
@@ -134,7 +134,7 @@
     })
   }
 
-  // ============ 椤圭洰鍔犺浇 ============
+  // ============ 项目加载 ============
   async function _loadProject(projectPath) {
     state.projectPath = projectPath
     state.isRepo = false
@@ -165,7 +165,7 @@
     }
   }
 
-  // ============ 鍒锋柊 ============
+  // ============ 刷新 ============
   function _refreshDebounce() {
     if (_refreshTimer) clearTimeout(_refreshTimer)
     _refreshTimer = setTimeout(() => { _refreshAll() }, 500)
@@ -207,11 +207,11 @@
     PanelManager.updateBadge('git', count > 0 ? count : null)
   }
 
-  // ============ 鏂囦欢鍒嗙被 ============
+  // ============ 文件分类 ============
   function _getStaged() { return state.files.filter(f => f.index && f.index !== ' ' && f.index !== '?') }
   function _getChanges() { return state.files.filter(f => (f.workingDir && f.workingDir !== ' ') || f.index === '?') }
 
-  // ============ 娓叉煋 ============
+  // ============ 渲染 ============
   function _render() {
     if (!_panelEl) return
     _panelEl.innerHTML = ''
@@ -230,17 +230,17 @@
       return
     }
 
-    // 闈㈡澘澶撮儴
+    // 面板头部
     panel.appendChild(_renderHeader())
-    // 鍒嗘敮淇℃伅
+    // 分支信息
     panel.appendChild(_renderBranchInfo())
-    // 鏆傚瓨鍖?
+    // 暂存区
     panel.appendChild(_renderStagedSection())
     const input = DOM.el('input', { placeholder: '新分支名称...' })
     panel.appendChild(_renderChangesSection())
-    // 鎻愪氦
+    // 提交
     panel.appendChild(_renderCommitSection())
-    // 鏈€杩戞彁浜?
+    // 最近提交
     panel.appendChild(_renderLogSection())
 
     _panelEl.appendChild(panel)
@@ -364,7 +364,7 @@
     row.appendChild(statusEl)
     row.appendChild(nameEl)
 
-    // 鎿嶄綔鎸夐挳
+    // 操作按钮
     const actionBtn = DOM.el('div', { class: 'git-file-action' })
     if (isStaged) {
       actionBtn.textContent = '−'
@@ -394,7 +394,7 @@
     // 点击 -> 查看 Diff
     row.addEventListener('click', () => _showDiff(file))
 
-    // 鍙抽敭鑿滃崟
+    // 右键菜单
     row.addEventListener('contextmenu', (e) => {
       e.preventDefault()
       e.stopPropagation()
@@ -444,14 +444,14 @@
     return section
   }
 
-  // ============ 鐘舵€佸浘鏍?============
+  // ============ 状态图标 ============
   function _statusIcon(s) {
     const c = (s || '').charAt(0).toUpperCase()
     const map = { 'M': 'M', 'A': 'A', 'D': 'D', 'R': 'R', '?': '?', 'C': 'C' }
     return map[c] || s || '?'
   }
 
-  // ============ 鎻愪氦 ============
+  // ============ 提交 ============
   async function _doCommit() {
     const msg = state.commitMsg.trim()
     if (!msg) { _showToast('请输入提交信息'); return }
@@ -473,7 +473,7 @@
     }
   }
 
-  // ============ 鍒嗘敮鍒囨崲 ============
+  // ============ 分支切换 ============
   function _toggleBranchDropdown(e) {
     if (state.branchDropdownOpen) {
       _closeBranchDropdown()
@@ -485,7 +485,7 @@
     _branchDropdownEl.style.left = rect.left + 'px'
     _branchDropdownEl.style.top = rect.bottom + 'px'
 
-    // 褰撳墠鍒嗘敮
+    // 当前分支
     state.branchList.forEach(b => {
       const item = DOM.el('div', { class: 'git-branch-item' + (b === state.currentBranch ? ' current' : '') })
       item.appendChild(DOM.el('span', {}, (b === state.currentBranch ? '> ' : '  ') + b))
@@ -495,10 +495,10 @@
     const textarea = DOM.el('textarea', { class: 'git-commit-input', placeholder: '提交信息...' })
     })
 
-    // 鍒嗛殧绾?
+    // 分隔线
     _branchDropdownEl.appendChild(DOM.el('div', { class: 'git-branch-separator' }))
 
-    // 鏂板缓鍒嗘敮
+    // 新建分支
     const createRow = DOM.el('div', { class: 'git-branch-create' })
     const input = DOM.el('input', { placeholder: '鏂板垎鏀悕绉?..' })
     const createBtn = DOM.el('button', {}, '鍒涘缓')
@@ -556,7 +556,7 @@
     }
   }
 
-  // ============ 鍙抽敭鑿滃崟 ============
+  // ============ 右键菜单 ============
   function _showContextMenu(e, file, isStaged) {
     _closeContextMenu()
     _contextMenuEl = DOM.el('div', { class: 'git-context-menu' })
@@ -607,14 +607,14 @@
     document.removeEventListener('mousedown', _onContextMenuOutside)
   }
 
-  // ============ 鎵撳紑鏂囦欢 ============
+  // ============ 打开文件 ============
   function _openFileInEditor(file) {
     if (!state.projectPath) return
     const fullPath = state.projectPath + '/' + file.path
     Commands.execute('editor.openFile', fullPath)
   }
 
-  // ============ 涓㈠純鏇存敼 ============
+  // ============ 丢弃更改 ============
   async function _discardFile(file) {
     const confirmed = await Services.dialog.confirm('确定要丢弃对 ' + file.path + ' 的更改吗？此操作不可撤销。')
     if (!confirmed) return
@@ -629,7 +629,7 @@
     }
   }
 
-  // ============ Diff 瑙嗗浘 ============
+  // ============ Diff 视图 ============
   async function _showDiff(file) {
     const mainArea = document.getElementById('workspaceMain')
     if (!mainArea) return
@@ -637,13 +637,13 @@
     // 纭繚宸ヤ綔鍖哄彲瑙?
     Layout.showWorkspace()
 
-    // 鍏抽棴宸叉湁鐨?Diff
+    // 关闭已有的 Diff
     _closeDiff()
 
-    // 鍒涘缓瑕嗙洊灞?
+    // 创建覆盖层
     _diffOverlayEl = DOM.el('div', { class: 'git-diff-overlay' })
 
-    // 澶撮儴
+    // 头部
     const header = DOM.el('div', { class: 'git-diff-header' })
     header.appendChild(DOM.el('span', { class: 'git-diff-title' }, '[Git] ' + file.path + '.diff'))
     const closeBtn = DOM.el('div', { class: 'git-diff-close' }, '脳')
@@ -651,7 +651,7 @@
     header.appendChild(closeBtn)
     _diffOverlayEl.appendChild(header)
 
-    // 缂栬緫鍣ㄤ綋
+    // 编辑器体
     const body = DOM.el('div', { class: 'git-diff-body' })
     _diffOverlayEl.appendChild(body)
 
@@ -662,7 +662,7 @@
     try {
       const monaco = await import('monaco-editor/esm/vs/editor/editor.api')
 
-      // 鑾峰彇 Diff 鏁版嵁
+      // 获取 Diff 数据
       const api = gitApi()
       if (!api) return
 
@@ -675,7 +675,7 @@
       let originalContent = ''
       try {
         const headDiff = await api.diff({ projectPath: state.projectPath, file: file.path, staged: true })
-        // 濡傛灉鏆傚瓨鍖烘湁锛岀敤鏆傚瓨鍖虹殑diff鍋氬弬鑰?
+        // 如果暂存区有，用暂存区的 diff 做参考?
       } catch {}
 
       // 灏濊瘯浠?git show 鑾峰彇鍘熷鍐呭
@@ -683,7 +683,7 @@
         const raw = await window.api.fs.readFile(state.projectPath + '/' + file.path).catch(() => null)
       } catch {}
 
-      // 浣跨敤 DiffEditor
+      // 使用 DiffEditor
       const lang = _getLanguage(file.path)
 
       // 濡傛灉鏂囦欢鏄柊澧炵殑锛屽師濮嬪唴瀹逛负绌?
@@ -691,13 +691,13 @@
       if (isNew) {
         originalContent = ''
       } else {
-        // 灏濊瘯閫氳繃 git show 鑾峰彇 HEAD 鐗堟湰
+        // 尝试通过 git show 获取 HEAD 版本 鐗堟湰
         try { /* reserved for future git show integration */ } catch {}
         // 鐢?diff 鐨勬柟寮忓洖鎺ㄥ師濮嬪唴瀹?鈥?绠€鍗曞疄鐜帮細鏄剧ず diff 鏂囨湰
         originalContent = ''
       }
 
-      // 绠€鍖栨柟妗堬細鐩存帴鐢ㄥ師濮嬫枃浠跺拰褰撳墠鏂囦欢鍋氬姣?
+      // 简化方案：直接用原始文件和当前文件做对比姣?
       // 瀵逛簬闈炴柊澧炴枃浠讹紝灏濊瘯浣跨敤鏆傚瓨鍖?diff 鏉ユ瀯寤哄師濮嬭鍥?
       // 涓轰簡绠€鍗曞拰鍙潬锛岀洿鎺ュ睍绀哄綋鍓嶆枃浠?vs diff 淇℃伅
 
@@ -757,7 +757,7 @@
     toast._timer = setTimeout(() => toast.classList.remove('visible'), 3000)
   }
 
-  // ============ 闃叉姈 ============
+  // ============ 防抖 ============
   function _debounce(fn, ms) {
     let t
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms) }
