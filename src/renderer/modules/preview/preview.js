@@ -1,4 +1,4 @@
-/* LiveFront Preview Manager */
+﻿/* LiveFront Preview Manager */
 window.LiveFront = window.LiveFront || {};
 const __vueRuntimeCache = new Map();
 
@@ -663,11 +663,10 @@ class PreviewManager {
   async _fetchVueRuntime() {
     if (this._vueRuntimeCache) return this._vueRuntimeCache
     try {
-      const resp = await fetch('https://unpkg.com/vue@3/dist/vue.global.js')
-      if (!resp.ok) throw new Error('HTTP ' + resp.status)
-      this._vueRuntimeCache = await resp.text()
+      const { loadVueRuntime } = await import('../vue-runtime.js')
+      this._vueRuntimeCache = await loadVueRuntime()
     } catch (e) {
-      console.warn('[Preview] Failed to fetch Vue runtime from CDN:', e)
+      console.warn('[Preview] Failed to load Vue runtime:', e)
       this._vueRuntimeCache = 'console.error("Vue runtime failed to load");'
     }
     return this._vueRuntimeCache
