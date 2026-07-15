@@ -36,7 +36,7 @@ function getLanguageDisplay(lang) {
 
 async function loadMonaco() {
   try {
-    return await import('../../lib/monaco-editor.js')
+    return await import('monaco-editor/esm/vs/editor/editor.api')
   } catch (e) {
     console.warn('[Editor] Monaco unavailable, using textarea fallback', e)
     return null
