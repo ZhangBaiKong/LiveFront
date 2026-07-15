@@ -447,7 +447,7 @@ function renderAgentIntegration(container) {
     container.appendChild(preview)
 
     try {
-      const parsed = JSON.parse(require('fs').readFileSync(filePath, 'utf-8'))
+      const rawContent = await LiveFront.Services.fileSystem.readFile(filePath); const parsed = JSON.parse(rawContent)
       const entries = Object.entries(parsed.mcpServers || parsed.mcp?.servers || {})
       if (!entries.length) { alert('未检测到可导入 Server'); return }
       const selected = []
@@ -608,3 +608,4 @@ function renderAbout(container) {
 LiveFront.Commands.register('settings.open', openSettings)
 
 export { openSettings }
+
