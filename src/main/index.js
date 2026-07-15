@@ -1,4 +1,4 @@
-﻿const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { join } = require('path');
 const fs = require('fs');
 const path = require('path');
@@ -11,10 +11,34 @@ const McpClientManager = require('./mcp-client');
 const LiveFrontMcpServer = require('./mcp-server');
 const AgentScanner = require('./agent-scanner');
 
+// ============ Safe Logging & Crash Guard ============
+const _origConsole = { log: console.log, warn: console.warn, error: console.error };
+const isDev = !app.isPackaged;
+function safeLog(level, ...args) {
+  try { _origConsole[level]('[Main]', ...args); } catch (_) {}
+}
+console.log = (...a) => { if (isDev) safeLog('log', ...a); };
+console.warn = (...a) => { if (isDev) safeLog('warn', ...a); };
+console.error = (...a) => { safeLog('error', ...a); };
+
+process.on('uncaughtException', (err) => {
+  if (err && err.code === 'EPIPE') return;
+  safeLog('error', 'uncaughtException:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  safeLog('error', 'unhandledRejection:', reason);
+});
+
+
 
 // ============ Core Services ============
 let mainWindow = null;
 let previewWindows = [];
+const PreviewServer = require('./preview-server');
+const previewServer = new PreviewServer();
+let pty = null;
+try { pty = require('node-pty'); } catch (_) { /* optional */ }
+
 let livefrontBridges = [];
 let fileWatcher = null;
 let currentProjectPath = '';
@@ -61,7 +85,8 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: false
+      webSecurity: false,
+      webviewTag: true
     }
   });
 
@@ -162,6 +187,205 @@ ipcMain.handle('mcp:list-configured-servers', async () => mcpClientManager.getCo
 ipcMain.handle('mcp:import-claude-desktop', async (_event, configPath) => mcpClientManager.importFromClaudeDesktop(configPath));
 ipcMain.handle('mcp:import-cursor', async (_event, configPath) => mcpClientManager.importFromCursor(configPath));
 
+// ============ Window ============
+ipcMain.handle('window:minimize', () => { try { mainWindow?.minimize(); } catch (_) {} return true; });
+ipcMain.handle('window:maximize', () => { try { if (mainWindow?.isMaximized()) mainWindow.unmaximize(); else mainWindow?.maximize(); } catch (_) {} return true; });
+ipcMain.handle('window:close', () => { try { mainWindow?.close(); } catch (_) {} return true; });
+ipcMain.handle('window:is-maximized', () => { try { return mainWindow?.isMaximized() ?? false; } catch (_) { return false; } });
+
+// ============ FileSystem ============
+ipcMain.handle('fs:read-dir', async (_e, p) => readDirTree(p));
+ipcMain.handle('fs:read-file', async (_e, p) => { try { return await fs.promises.readFile(p, 'utf-8'); } catch (e) { return ''; } });
+ipcMain.handle('fs:write-file', async (_e, p, c) => { await fs.promises.writeFile(p, c, 'utf-8'); return true; });
+ipcMain.handle('fs:create-file', async (_e, p, c) => { await fs.promises.writeFile(p, c || '', 'utf-8'); return true; });
+ipcMain.handle('fs:create-dir', async (_e, p) => { await fs.promises.mkdir(p, { recursive: true }); return true; });
+ipcMain.handle('fs:delete-file', async (_e, p) => { await fs.promises.unlink(p); return true; });
+ipcMain.handle('fs:rename', async (_e, o, n) => { await fs.promises.rename(o, n); return true; });
+ipcMain.handle('fs:stat', async (_e, p) => { const s = await fs.promises.stat(p); return { isFile: s.isFile(), isDirectory: s.isDirectory(), size: s.size, mtime: s.mtimeMs }; });
+ipcMain.handle('fs:exists', async (_e, p) => fs.existsSync(p));
+ipcMain.handle('fs:read-dir-by-ext', async (_e, p, ext) => readDirByExt(p, ext));
+
+// ============ Dialog ============
+ipcMain.handle('dialog:open-folder', async () => {
+  try {
+    const r = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
+    return r.canceled ? null : r.filePaths[0];
+  } catch (_) { return null; }
+});
+ipcMain.handle('dialog:open-file', async (_e, f) => {
+  try {
+    const r = await dialog.showOpenDialog(mainWindow, { properties: ['openFile'], filters: f || [] });
+    return r.canceled ? null : r.filePaths[0];
+  } catch (_) { return null; }
+});
+ipcMain.handle('dialog:save-file', async (_e, f) => {
+  try {
+    const r = await dialog.showSaveDialog(mainWindow, {
+      filters: f || [{ name: 'HTML', extensions: ['html', 'htm'] }, { name: 'CSS', extensions: ['css'] }, { name: 'JS', extensions: ['js', 'ts'] }, { name: 'All', extensions: ['*'] }]
+    });
+    return r.canceled ? null : r.filePath;
+  } catch (_) { return null; }
+});
+ipcMain.handle('dialog:confirm', async (_e, m) => {
+  try {
+    const r = await dialog.showMessageBox(mainWindow, { type: 'question', buttons: ['确认', '取消'], message: m });
+    return r.response === 0;
+  } catch (_) { return false; }
+});
+
+// ============ Shell & App ============
+ipcMain.handle('shell:open-external', async (_e, u) => { try { await shell.openExternal(u); } catch (_) {} return true; });
+ipcMain.handle('shell:show-item', async (_e, p) => { try { shell.showItemInFolder(p); } catch (_) {} return true; });
+ipcMain.handle('app:get-version', () => { try { return app.getVersion(); } catch (_) { return '0.0.0'; } });
+ipcMain.handle('app:get-path', (_e, n) => { try { return app.getPath(n); } catch (_) { return ''; } });
+
+// ============ Terminal ============
+let terminals = {};
+let termCounter = 0;
+ipcMain.handle('terminal:create', (_e, opts = {}) => {
+  try {
+    if (!pty) return { error: 'node-pty not installed' };
+    const termId = 'term-' + (++termCounter);
+    const shellName = process.platform === 'win32' ? (process.env.COMSPEC || 'powershell.exe') : (process.env.SHELL || '/bin/bash');
+    const term = pty.spawn(shellName, [], { name: 'xterm-256color', cols: opts.cols || 80, rows: opts.rows || 24, cwd: opts.cwd || process.env.HOME || process.env.USERPROFILE });
+    terminals[termId] = term;
+    term.onData((data) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('terminal:data', { termId, data }); });
+    term.onExit(() => { delete terminals[termId]; if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('terminal:exit', { termId }); });
+    return { termId };
+  } catch (e) { return { error: e.message }; }
+});
+ipcMain.on('terminal:write', (_e, { termId, data } = {}) => { try { terminals[termId]?.write(data); } catch (_) {} });
+ipcMain.on('terminal:resize', (_e, { termId, cols, rows } = {}) => { try { terminals[termId]?.resize(cols, rows); } catch (_) {} });
+ipcMain.on('terminal:kill', (_e, termId) => { try { terminals[termId]?.kill(); delete terminals[termId]; } catch (_) {} });
+
+// ============ Preview ============
+ipcMain.handle('preview:start', async (_e, p, o) => { try { const port = await previewServer.start(p, o || {}); return { port, url: 'http://127.0.0.1:' + port + '/' }; } catch (e) { return { error: e.message }; } });
+ipcMain.handle('preview:stop', async () => { try { await previewServer.stop(); } catch (_) {} return true; });
+ipcMain.handle('preview:url', (_e, p) => { try { return previewServer.getUrl(p); } catch (_) { return ''; } });
+ipcMain.handle('preview:port', () => { try { return previewServer.getPort(); } catch (_) { return 0; } });
+ipcMain.handle('preview:set-effects', (_e, c) => { try { previewServer.setEffects(c); } catch (_) {} return true; });
+ipcMain.handle('preview:open-external-window', (_e, u) => {
+  try {
+    const w = new BrowserWindow({ width: 1200, height: 800, title: 'LiveFront Preview' });
+    w.loadURL(u);
+    previewWindows.push(w);
+    w.on('closed', () => { previewWindows = previewWindows.filter(x => !x.isDestroyed()); });
+  } catch (_) {}
+  return true;
+});
+ipcMain.handle('preview:refresh-external', () => { previewWindows.forEach(w => { if (!w.isDestroyed()) w.webContents.reloadIgnoringCache(); }); return true; });
+
+// ============ AI ============
+ipcMain.handle('ai:request', async (_e, { provider, apiKey, model, messages, maxTokens } = {}) => {
+  try {
+    const endpoint = provider;
+    const headers = { 'Content-Type': 'application/json' };
+    let body;
+    if (provider === 'claude' || provider?.includes('anthropic')) {
+      headers['x-api-key'] = apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      const systemMsg = (messages || []).find(m => m.role === 'system');
+      const userMsgs = (messages || []).filter(m => m.role !== 'system');
+      body = JSON.stringify({ model, max_tokens: maxTokens || 4096, system: systemMsg?.content || '', messages: userMsgs });
+    } else {
+      headers['Authorization'] = 'Bearer ' + apiKey;
+      body = JSON.stringify({ model, messages, max_tokens: maxTokens || 4096, temperature: 0.7 });
+    }
+    const resp = await fetch(endpoint, { method: 'POST', headers, body });
+    if (!resp.ok) { const errText = await resp.text(); return { error: 'API error ' + resp.status + ': ' + errText.substring(0, 200) }; }
+    const data = await resp.json();
+    if (provider === 'claude' || provider?.includes('anthropic')) return { content: data.content?.[0]?.text || '', usage: data.usage };
+    return { content: data.choices?.[0]?.message?.content || '', usage: data.usage };
+  } catch (e) { return { error: e.message }; }
+});
+
+ipcMain.handle('ai:stream-request', async (_e, { provider, apiKey, model, messages, maxTokens } = {}) => {
+  try {
+    const endpoint = provider;
+    const headers = { 'Content-Type': 'application/json' };
+    let body;
+    if (provider === 'claude' || provider?.includes('anthropic')) {
+      headers['x-api-key'] = apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      const systemMsg = (messages || []).find(m => m.role === 'system');
+      const userMsgs = (messages || []).filter(m => m.role !== 'system');
+      body = JSON.stringify({ model, max_tokens: maxTokens || 4096, stream: true, system: systemMsg?.content || '', messages: userMsgs });
+    } else {
+      headers['Authorization'] = 'Bearer ' + apiKey;
+      body = JSON.stringify({ model, messages, max_tokens: maxTokens || 4096, temperature: 0.7, stream: true });
+    }
+    const resp = await fetch(endpoint, { method: 'POST', headers, body });
+    if (!resp.ok) { const errText = await resp.text(); return { error: 'API error ' + resp.status + ': ' + errText.substring(0, 200) }; }
+    let fullContent = '';
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          let chunk = '';
+          if (provider === 'claude' || provider?.includes('anthropic')) { if (parsed.type === 'content_block_delta') chunk = parsed.delta?.text || ''; }
+          else { chunk = parsed.choices?.[0]?.delta?.content || ''; }
+          if (chunk) { fullContent += chunk; sendToRenderer('ai:stream-chunk', { chunk }); }
+        } catch (_) {}
+      }
+    }
+    sendToRenderer('ai:stream-end', { fullResponse: fullContent });
+    return { content: fullContent };
+  } catch (e) { return { error: e.message }; }
+});
+
+ipcMain.handle('ai:send-to-cli', async (_e, params = {}) => {
+  try {
+    sendToRenderer('ai:stream-chunk', { chunk: params.summary || '' });
+    sendToRenderer('ai:stream-end', { fullResponse: params.summary || '' });
+    return { success: true };
+  } catch (e) { return { error: e.message }; }
+});
+
+// ============ Git ============
+ipcMain.handle('git:init', async (_e, { projectPath } = {}) => { try { await simpleGit(projectPath).init(); return { success: true }; } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:status', async (_e, { projectPath } = {}) => { try { return await simpleGit(projectPath).status(); } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:log', async (_e, { projectPath, count } = {}) => { try { return await simpleGit(projectPath).log({ maxCount: count || 30 }); } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:stage', async (_e, { projectPath, files } = {}) => { try { await simpleGit(projectPath).add(files || []); return { success: true }; } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:unstage', async (_e, { projectPath, files } = {}) => { try { await simpleGit(projectPath).reset(['HEAD', ...files]); return { success: true }; } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:commit', async (_e, { projectPath, message } = {}) => { try { return await simpleGit(projectPath).commit(message || 'update'); } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:branches', async (_e, { projectPath } = {}) => { try { return await simpleGit(projectPath).branchLocal(); } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:checkout', async (_e, { projectPath, branch } = {}) => { try { await simpleGit(projectPath).checkout(branch); return { success: true }; } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:create-branch', async (_e, { projectPath, name } = {}) => { try { await simpleGit(projectPath).checkoutLocalBranch(name); return { success: true }; } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:diff', async (_e, { projectPath, file, staged } = {}) => { try { const args = staged ? ['--cached'] : []; if (file) args.push('--', file); return await simpleGit(projectPath).diff(args); } catch (e) { return { error: e.message }; } });
+ipcMain.handle('git:discard', async (_e, { projectPath, file } = {}) => { try { await simpleGit(projectPath).checkout(['--', file]); return { success: true }; } catch (e) { return { error: e.message }; } });
+
+// ============ Project ============
+ipcMain.handle('project:export-zip', async (_e, { projectPath, outputPath } = {}) => {
+  try {
+    const output = fs.createWriteStream(outputPath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(output);
+    archive.glob('**/*', { cwd: projectPath, ignore: ['node_modules/**', '.git/**', 'dist/**', 'out/**', '.livefront/**'] });
+    await archive.finalize();
+    return { success: true };
+  } catch (e) { return { error: e.message }; }
+});
+
+// ============ Bridge ============
+ipcMain.handle('bridge:send-to-extension', (_e, data) => {
+  try {
+    livefrontBridges.forEach(ws => { if (ws.readyState === 1) ws.send(JSON.stringify(data)); });
+    return { success: livefrontBridges.length > 0 };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+ipcMain.handle('bridge:is-connected', () => ({ connected: livefrontBridges.length > 0 }));
+
 // ============ Ready ============
 app.whenReady().then(async () => {
   createWindow();
@@ -226,13 +450,13 @@ function startLocalImportServer() {
           const filename = payload.filename || 'imported-file.html';
           const source = payload.source || 'api';
           const project = payload.project || loadMainSettings()?.lastProjectPath || '';
-          if (!code) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: '缺少 code 字段' })); return; }
-          if (!project) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: '未找到关联项目路径' })); return; }
+          if (!code) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: 'Missing code field' })); return; }
+          if (!project) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: 'No associated project found' })); return; }
           const target = path.join(project, filename);
           await fs.promises.writeFile(target, code, 'utf-8');
           sendToRenderer('code:api-imported', { filePath: target, filename, source });
           res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({ success: true, message: '代码已导入', filePath: target }));
+          res.end(JSON.stringify({ success: true, message: 'Code imported', filePath: target }));
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ success: false, message: error.message }));
@@ -270,4 +494,5 @@ function startLocalImportServer() {
   server.listen(port, '127.0.0.1', () => {
     console.log('[Main] Local import API started at http://localhost:' + port + '/api/import');
   });
-}
+}
+

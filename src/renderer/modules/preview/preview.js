@@ -1,4 +1,4 @@
-ï»¿/* LiveFront Preview Manager */
+/* LiveFront Preview Manager */
 window.LiveFront = window.LiveFront || {};
 const __vueRuntimeCache = new Map();
 
@@ -17,7 +17,7 @@ class PreviewManager {
     this._device = 'desktop'
     this._deviceWidths = { desktop: '100%', tablet: '768px', mobile: '375px' }
     this._ready = false
-    this._pollTimer = null
+    this._consoleBridgeHandler = null
     this._framework = 'html'
     this._frameworkInfo = null
     this._badgeEl = null
@@ -145,15 +145,17 @@ class PreviewManager {
     }
 
     const result = await LiveFront.Services.preview.start(projectPath)
+    console.log('[Preview] Server start result:', JSON.stringify(result))
     if (result.error) { console.error('[Preview] Failed:', result.error); return }
     this._port = result.port
     this._ready = true
+    console.log('[Preview] Creating webview, port:', this._port)
     this._createWebview()
     this._loadUrl(this._entryFile)
   }
 
   async stopPreview() {
-    this._stopPolling()
+    this._teardownIpcBridge()
     await LiveFront.Services.preview.stop()
     this._port = 0
     this._ready = false
@@ -401,7 +403,7 @@ class PreviewManager {
       '<script>',
       '(function() {',
       'var hoveringDiv = null, selectedDiv = null;',
-      'function emit(obj) { try { window.__lf_events = window.__lf_events || []; window.__lf_events.push(obj); } catch(e) {} }',
+      'function emit(obj) { try { if (window.__lf_sendEvent) window.__lf_sendEvent(obj); } catch(e) {} }',
       'function ensureDiv(prop) {',
       '  if (!prop) { prop = {}; }',
       '  var d = document.createElement("div");',
@@ -807,16 +809,19 @@ class PreviewManager {
     this._webviewArea.appendChild(this._wrapperEl)
 
     this._webview.addEventListener('did-finish-load', () => {
+      if (this._loadTimeout) { clearTimeout(this._loadTimeout); this._loadTimeout = null }
       this._showLoading(false)
-      this._startPolling()
+      this._setupIpcBridge()
     })
 
     this._webview.addEventListener('did-fail-load', (e) => {
+      if (this._loadTimeout) { clearTimeout(this._loadTimeout); this._loadTimeout = null }
       this._showLoading(false)
       if (e.errorCode !== -3) console.warn('[Preview] Load failed:', e.errorDescription)
     })
 
     this._webview.addEventListener('console-message', (e) => {
+      if (typeof e.message === 'string' && e.message.startsWith('__LF_EVENT__')) return
       LiveFront.EventBus.emit('preview:console', {
         level: e.level === 2 ? 'error' : e.level === 1 ? 'warn' : 'log',
         message: e.message, line: e.line
@@ -824,34 +829,26 @@ class PreviewManager {
     })
   }
 
-  _startPolling() {
-    this._stopPolling()
+  _setupIpcBridge() {
+    this._teardownIpcBridge()
     if (!this._webview) return
 
-    this._pollTimer = setInterval(() => {
-      if (!this._webview) { this._stopPolling(); return }
-
-      const code = `(function() {
-        var events = window.__lf_events || [];
-        window.__lf_events = [];
-        return JSON.stringify(events);
-      })()`
-
-      this._webview.executeJavaScript(code).then((jsonStr) => {
-        if (!jsonStr) return
-        let events
-        try { events = JSON.parse(jsonStr) } catch { return }
-        for (const ev of events) {
-          this._handleEvent(ev)
-        }
-      }).catch(() => {})
-    }, 100)
+    // Í¨¹ý console-message ÊÂ¼þÀ¹½Ø guest ×¢Èë½Å±¾µÄ __LF_EVENT__ ÏûÏ¢
+    this._consoleBridgeHandler = (e) => {
+      if (typeof e.message === 'string' && e.message.startsWith('__LF_EVENT__')) {
+        try {
+          const data = JSON.parse(e.message.substring(12))
+          this._handleEvent(data)
+        } catch (err) {}
+      }
+    }
+    this._webview.addEventListener('console-message', this._consoleBridgeHandler)
   }
 
-  _stopPolling() {
-    if (this._pollTimer) {
-      clearInterval(this._pollTimer)
-      this._pollTimer = null
+  _teardownIpcBridge() {
+    if (this._consoleBridgeHandler && this._webview) {
+      this._webview.removeEventListener('console-message', this._consoleBridgeHandler)
+      this._consoleBridgeHandler = null
     }
   }
 
@@ -902,9 +899,13 @@ class PreviewManager {
   }
 
   _loadUrl(entryFile) {
-    if (!this._webview || !this._port) return
+    if (!this._webview || !this._port) { console.warn('[Preview] _loadUrl skipped: webview=' + !!this._webview + ' port=' + this._port); return }
     const url = 'http://127.0.0.1:' + this._port + entryFile
+    console.log('[Preview] Loading URL:', url)
     this._showLoading(true)
+    // °²È«³¬Ê±£º10Ãëºó×Ô¶¯Òþ²Ø¼ÓÔØÌõ£¬·ÀÖ¹¿¨ËÀ
+    if (this._loadTimeout) clearTimeout(this._loadTimeout)
+    this._loadTimeout = setTimeout(() => { this._showLoading(false) }, 10000)
     this._webview.src = url
     this._pathEl.textContent = entryFile
   }

@@ -1,4 +1,4 @@
-/* LiveFront Preview Server — 主进程 HTTP 服务 */
+/* LiveFront Preview Server �?主进�?HTTP 服务 */
 const http = require('http')
 const fs = require('fs')
 const path = require('path')
@@ -32,7 +32,7 @@ const CONTENT_TYPES = {
   '.map': 'application/json'
 }
 
-// 注入到 HTML 文件的增强脚本
+// 注入�?HTML 文件的增强脚�?
 function getInjectedScript() {
   return `
 <script>
@@ -137,7 +137,7 @@ function getInjectedScript() {
     if (!_pickerActive) return;
     const el = e.target;
     if (el === document.body || el === document.documentElement) return;
-    // 忽略注入的 overlay
+    // 忽略注入�?overlay
     if (el.style && el.style.position === 'fixed' && el.style.pointerEvents === 'none') return;
     e.preventDefault();
     e.stopPropagation();
@@ -148,9 +148,7 @@ function getInjectedScript() {
     positionOverlay(_selectedOverlay, el);
 
     const info = getElementInfo(el);
-    window.parent.postMessage(info, '*');
-    if (!window.__lf_events) window.__lf_events = [];
-    window.__lf_events.push(info);
+    window.parent.postMessage(info, '*'); console.info('__LF_EVENT__' + JSON.stringify(info));
   }, true);
 
   // ESC 取消选中
@@ -158,9 +156,7 @@ function getInjectedScript() {
     if (e.key === 'Escape') {
       if (_selectedOverlay) { _selectedOverlay.style.width = '0'; _selectedOverlay.style.height = '0'; }
       _selectedEl = null;
-      window.parent.postMessage({ action: 'element-deselected' }, '*');
-      if (!window.__lf_events) window.__lf_events = [];
-      window.__lf_events.push({ action: 'element-deselected' });
+      window.parent.postMessage({ action: 'element-deselected' }, '*'); console.info('__LF_EVENT__' + JSON.stringify({ action: 'element-deselected' }));
     }
   });
 
@@ -182,16 +178,12 @@ function getInjectedScript() {
         const args = Array.from(arguments).map(a => {
           try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch(e) { return String(a); }
         });
-        window.parent.postMessage({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() }, '*');
-        if (!window.__lf_events) window.__lf_events = [];
-        window.__lf_events.push({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() });
+        window.parent.postMessage({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() }, '*'); console.info('__LF_EVENT__' + JSON.stringify({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() }));
       } catch(e) {}
     };
   });
 
-  window.parent.postMessage({ action: 'preview-ready' }, '*');
-  if (!window.__lf_events) window.__lf_events = [];
-  window.__lf_events.push({ action: 'preview-ready' });
+  window.parent.postMessage({ action: 'preview-ready' }, '*'); console.info('__LF_EVENT__' + JSON.stringify({ action: 'preview-ready' }));
 })();
 </script>
 `
@@ -202,7 +194,7 @@ class PreviewServer {
     this._server = null
     this._port = 0
     this._projectPath = null
-    this._effects = ''  // 注入的效果 CSS
+    this._effects = ''  // 注入的效�?CSS
     this._tailwind = false
   }
 
@@ -225,15 +217,15 @@ class PreviewServer {
       this._handleRequest(req, res)
     })
 
+    this._server.on('error', (err) => {
+      console.error('[PreviewServer] Server error:', err.code || err.message)
+      reject(err)
+    })
+
     this._server.listen(0, '127.0.0.1', () => {
       this._port = this._server.address().port
       console.log('[PreviewServer] Started on port', this._port)
       resolve(this._port)
-    })
-
-    this._server.on('error', (err) => {
-      console.error('[PreviewServer] Error:', err)
-      reject(err)
     })
   }
 
@@ -257,7 +249,7 @@ class PreviewServer {
 
   getUrl(filePath) {
     if (!this._port) return ''
-    const relPath = filePath ? path.relative(this._projectPath, filePath).replace(/\\\\/g, '/') : '/index.html'
+    const relPath = filePath ? path.relative(this._projectPath, filePath).replace(/\\\\/g, '/') : 'index.html'
     return 'http://127.0.0.1:' + this._port + '/' + relPath
   }
 
@@ -274,14 +266,14 @@ class PreviewServer {
     const safePath = path.normalize(urlPath).replace(/^(\.\.(\/|\\|$))+/, '')
     const filePath = path.join(this._projectPath, safePath)
 
-    // 确保请求的文件在项目目录内
-    if (!filePath.startsWith(this._projectPath)) {
+    // 确保请求的文件在项目目录�?
+    if (!filePath.startsWith(this._projectPath + path.sep) && filePath !== this._projectPath) {
       res.writeHead(403, { 'Content-Type': 'text/plain' })
       res.end('403 Forbidden')
       return
     }
 
-    // 检查文件是否存在
+    // 检查文件是否存�?
     fs.stat(filePath, (err, stat) => {
       if (err || !stat.isFile()) {
         // 尝试 index.html
@@ -311,7 +303,7 @@ class PreviewServer {
 
       const contentType = CONTENT_TYPES[ext] || 'application/octet-stream'
 
-      // HTML 文件：注入增强脚本
+      // HTML 文件：注入增强脚�?
       if (ext === '.html' || ext === '.htm') {
         let html = data.toString('utf-8')
 
