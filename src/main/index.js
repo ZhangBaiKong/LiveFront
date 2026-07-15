@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+ï»¿const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { join } = require('path');
 const fs = require('fs');
 const path = require('path');
@@ -173,11 +173,18 @@ app.whenReady().then(async () => {
     console.warn("[Main] Failed to start Local Import API:", e?.message || e);
   }
 
-  // Auto-start MCP Server (default port 9528)
+  // Auto-start MCP Server (default port 9528, fallback 9530)
   try {
-    await mcpServer.start(9528);
+    const mcpResult = await mcpServer.start(9528);
+    console.log('[Main] MCP Server started on port', mcpResult.port);
   } catch (e) {
-    console.warn("[Main] Failed to start MCP Server:", e?.message || e);
+    console.warn('[Main] MCP Server port 9528 failed (' + (e?.message || e) + '), trying 9530...');
+    try {
+      const mcpResult = await mcpServer.start(9530);
+      console.log('[Main] MCP Server started on fallback port', mcpResult.port);
+    } catch (e2) {
+      console.warn('[Main] Failed to start MCP Server:', e2?.message || e2);
+    }
   }
 
   app.on("activate", () => {
@@ -219,13 +226,13 @@ function startLocalImportServer() {
           const filename = payload.filename || 'imported-file.html';
           const source = payload.source || 'api';
           const project = payload.project || loadMainSettings()?.lastProjectPath || '';
-          if (!code) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: 'È±ÉÙ code ×Ö¶Î' })); return; }
-          if (!project) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: 'Î´ÕÒµ½¹ØÁªÏîÄ¿Â·¾¶' })); return; }
+          if (!code) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: 'ç¼ºå°‘ code å­—æ®µ' })); return; }
+          if (!project) { res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ success: false, message: 'æœªæ‰¾åˆ°å…³è”é¡¹ç›®è·¯å¾„' })); return; }
           const target = path.join(project, filename);
           await fs.promises.writeFile(target, code, 'utf-8');
           sendToRenderer('code:api-imported', { filePath: target, filename, source });
           res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({ success: true, message: '´úÂëÒÑµ¼Èë', filePath: target }));
+          res.end(JSON.stringify({ success: true, message: 'ä»£ç å·²å¯¼å…¥', filePath: target }));
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ success: false, message: error.message }));
@@ -246,7 +253,21 @@ function startLocalImportServer() {
     });
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      const fallbackPort = port + 2;
+      console.warn('[Main] Port ' + port + ' in use, trying ' + fallbackPort);
+      const retryServer = server.listen(fallbackPort, '127.0.0.1');
+      retryServer.on('error', (e) => { console.error('[Main] Local import API failed:', e.message); });
+      retryServer.once('listening', () => {
+        console.log('[Main] Local import API started at http://localhost:' + fallbackPort + '/api/import');
+      });
+    } else {
+      console.error('[Main] Local import API error:', err.message);
+    }
+  });
+
   server.listen(port, '127.0.0.1', () => {
     console.log('[Main] Local import API started at http://localhost:' + port + '/api/import');
   });
-}
+}

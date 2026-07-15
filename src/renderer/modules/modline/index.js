@@ -1,4 +1,4 @@
-﻿/* LiveFront ModLine — 修改线管理 */
+/* LiveFront ModLine — 修改线管理 */
 (function () {
   // ============ 快照栈 ============
   const SnapshotStack = {
@@ -76,7 +76,7 @@
     overlay.className = 'modline-dialog-overlay'
     overlay.innerHTML = `
       <div class="modline-dialog">
-        <h3>⚠️ AI 未配置</h3>
+        <h3>AI 未配置</h3>
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">
           使用修改线发送功能前，请先在 AI 面板中配置至少一个 AI 提供商的 API Key。
         </p>
@@ -148,7 +148,7 @@
     const lines = []
     const indent = '  '.repeat(depth)
     if (node.name) {
-      lines.push(indent + (node.type === 'directory' ? '📁 ' : '📄 ') + node.name)
+      lines.push(indent + (node.type === 'directory' ? '' : '') + node.name)
     }
     if (node.children) {
       for (const child of node.children) {
@@ -341,14 +341,14 @@
     const doCall = async () => LiveFront.Services.mcp.callRemoteTool(serverName, 'livefront.apply-modification-summary', { summary });
     try {
       const result = await doCall();
-      _showToast('✅ 已通过 MCP 发送到 ' + serverName);
+      _showToast('已通过 MCP 发送到 ' + serverName);
       return result;
     } catch (error) {
       const friendly = classifyMcpError(error);
       _showToastWithAction('MCP 发送失败: ' + friendly, '重试', async () => {
         try {
           const result = await doCall();
-          _showToast('✅ 重试成功：' + serverName);
+          _showToast('重试成功：' + serverName);
           return result;
         } catch (retryError) {
           _showToast('重试失败: ' + classifyMcpError(retryError));
@@ -372,7 +372,7 @@
         if (conn && conn.connected) {
           const result = await LiveFront.Services.bridge.sendToExtension(summary, bridgeTarget)
           if (result && result.success) {
-            _showToast("✅ 已自动发送到 " + (dialog.name || dialog.type))
+            _showToast("已自动发送到 " + (dialog.name || dialog.type))
             LiveFront.EventBus.emit("modline:send-to-dialog", {
               dialogId: dialog.id, dialogName: dialog.name || dialog.type || "dialog",
               identifier: dialog.identifier || "", summary
@@ -391,7 +391,7 @@
         LiveFront.ipc.invoke("shell:open-external", dialog.identifier)
       }
       _showToastWithAction(
-        "📋 摘要已复制（浏览器插件未连接），请手动粘贴",
+        "摘要已复制（浏览器插件未连接），请手动粘贴",
         "打开页面",
         () => { if (dialog.identifier) LiveFront.ipc.invoke("shell:open-external", dialog.identifier) }
       )
@@ -592,14 +592,14 @@
             })
           })
           this._render()
-          _showToast('✅ 所有修改已应用（' + pending.length + ' 个）')
+          _showToast('所有修改已应用（' + pending.length + ' 个）')
           LiveFront.EventBus.emit('modline:batch-applied', { count: pending.length })
 
         } catch (err) {
           // 回退所有 pending 标签
           pending.forEach(tag => { tag.status = 'pending' })
           this._render()
-          _showToast('❌ AI 调用失败: ' + err.message)
+          _showToast('AI 调用失败: ' + err.message)
         }
 
       } else {
@@ -645,19 +645,19 @@
           const remaining = this.getPendingTags().length
           if (remaining > 0) {
             _showToastWithAction(
-              '✅ 第 ' + (first.order + 1) + ' 步已完成，还有 ' + remaining + ' 个待处理',
+              '第 ' + (first.order + 1) + ' 步已完成，还有 ' + remaining + ' 个待处理',
               '继续下一步',
               () => { ModStore.sendModifications() }
             )
           } else {
-            _showToast('✅ 所有修改已完成！')
+            _showToast('所有修改已完成！')
           }
 
         } catch (err) {
           // 回退
           first.status = 'pending'
           this._render()
-          _showToast('❌ AI 调用失败: ' + err.message)
+          _showToast('AI 调用失败: ' + err.message)
         }
       }
 
@@ -1055,9 +1055,9 @@
           <div class="modline-header-right">
             <span class="modline-mode-label" id="modlineModeLabel" title="点击切换模式">全部发送</span>
             <button class="modline-send-btn" id="modlineSendBtn" disabled>发送修改</button>
-            <button class="modline-copy-btn" id="modlineCopyBtn" title="复制摘要">📋 复制摘要</button>
+            <button class="modline-copy-btn" id="modlineCopyBtn" title="复制摘要">复制摘要</button>
             <div class="modline-sendback-wrap" id="modlineSendbackWrap">
-              <button class="modline-sendback-btn" id="modlineSendbackBtn">📤 发回AI ▾</button>
+              <button class="modline-sendback-btn" id="modlineSendbackBtn">发回AI ▾</button>
               <div class="modline-sendback-menu" id="modlineSendbackMenu"></div>
             </div>
           </div>
@@ -1065,7 +1065,7 @@
         <div class="modline-ai-hint"          </div>
         </div>
         <div class="modline-ai-hint" id="modlineAIHint" style="display:none;">
-          <span>💡 配置 AI 后可使用发送修改功能</span>
+          <span>配置 AI 后可使用发送修改功能</span>
           <button class="modline-ai-hint-btn" id="modlineAIHintBtn">前往配置</button>
         </div>
         <div class="modline-track" id="modlineTrack" style="position:relative;"></div>
@@ -1088,19 +1088,19 @@
 
       copyBtn?.addEventListener('click', () => {
         copyModlineSummary()
-        _showToast('\u2705 \u4fee\u6539\u6458\u8981\u5df2\u590d\u5236\u5230\u526a\u8d34\u677f')
+        _showToast('\u4fee\u6539\u6458\u8981\u5df2\u590d\u5236\u5230\u526a\u8d34\u677f')
       })
 
       function renderSendbackMenu() {
         if (!sendbackMenu) return
         const options = getSavedDialogOptions()
-        const icons = { codex: '\U0001f4bb', chatgpt: '\U0001f916', 'claude-web': '\U0001f9e0', 'doubao-web': '\U0001f36b', mcp: '\U0001f4ac', other: '\U0001f4ac' }
+        const icons = { codex: '', chatgpt: '', 'claude-web': '', 'doubao-web': '', mcp: '', other: '' }
         let html = options.map(function(d) {
           return '<div class="modline-sendback-item" data-id="' + d.id + '">' +
             '<span class="modline-sendback-icon">' + (icons[d.type] || icons.other) + '</span>' +
             '<span>' + (d.name || d.type || 'dialog') + '</span></div>'
         }).join('')
-        html += '<div class="modline-sendback-item modline-sendback-config" data-id="__config__"><span>\u2699\ufe0f \u914d\u7f6e\u5176\u4ed6AI...</span></div>'
+        html += '<div class="modline-sendback-item modline-sendback-config" data-id="__config__"><span>\u914d\u7f6e\u5176\u4ed6AI...</span></div>'
         sendbackMenu.innerHTML = html
       }
 

@@ -12,7 +12,7 @@
     ui: {
       sidebar: {
         enabled: true,
-        icon: '📁',
+        icon: '',
         label: '文件',
         panel: null
       },
@@ -91,24 +91,24 @@
 
     // ── 文件图标映射 ──
     _getFileIcon(name, type) {
-      if (type === 'directory') return '📁';
+      if (type === 'directory') return '';
       const ext = name.split('.').pop().toLowerCase();
       const iconMap = {
-        'html': '🌐', 'htm': '🌐',
-        'css': '🎨', 'scss': '🎨', 'less': '🎨',
-        'js': '📜', 'mjs': '📜', 'cjs': '📜',
-        'ts': '📘', 'tsx': '📘',
-        'jsx': '⚛️',
-        'json': '📋',
-        'md': '📝', 'txt': '📝',
-        'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'svg': '🖼️', 'webp': '🖼️', 'ico': '🖼️',
-        'mp4': '🎬', 'webm': '🎬', 'mp3': '🎵', 'wav': '🎵',
-        'zip': '📦', 'tar': '📦', 'gz': '📦',
-        'pdf': '📄',
-        'gitignore': '🔧', 'env': '🔧',
-        'yml': '⚙️', 'yaml': '⚙️', 'toml': '⚙️',
+        'html': '', 'htm': '',
+        'css': '', 'scss': '', 'less': '',
+        'js': '', 'mjs': '', 'cjs': '',
+        'ts': '', 'tsx': '',
+        'jsx': '',
+        'json': '',
+        'md': '', 'txt': '',
+        'png': '', 'jpg': '', 'jpeg': '', 'gif': '', 'svg': '', 'webp': '', 'ico': '',
+        'mp4': '', 'webm': '', 'mp3': '', 'wav': '',
+        'zip': '', 'tar': '', 'gz': '',
+        'pdf': '',
+        'gitignore': '', 'env': '',
+        'yml': '', 'yaml': '', 'toml': '',
       };
-      return iconMap[ext] || '📄';
+      return iconMap[ext] || '';
     },
 
     async _openFolder() {

@@ -156,13 +156,13 @@ class TabBar {
   _getIcon(name) {
     const ext = name.split('.').pop().toLowerCase()
     const icons = {
-      html: '🌐', htm: '🌐', css: '🎨', scss: '🎨', less: '🎨',
-      js: '📜', mjs: '📜', cjs: '📜', ts: '📘', tsx: '📘',
-      jsx: '⚛️', json: '📋', md: '📝', txt: '📝',
-      svg: '🖼️', xml: '📄', png: '🖼️', jpg: '🖼️',
-      yml: '⚙️', yaml: '⚙️'
+      html: '', htm: '', css: '', scss: '', less: '',
+      js: '', mjs: '', cjs: '', ts: '', tsx: '',
+      jsx: '', json: '', md: '', txt: '',
+      svg: '', xml: '', png: '', jpg: '',
+      yml: '', yaml: ''
     }
-    return icons[ext] || '📄'
+    return icons[ext] || ''
   }
 
   _clearEmpty() {

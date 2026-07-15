@@ -105,7 +105,7 @@
     PanelManager.registerTab({
       id: 'git',
       label: '源代码管理',
-      icon: '🌿',
+      icon: '',
       badge: null,
       render(container) {
         _panelEl = container
@@ -219,13 +219,13 @@
     const panel = DOM.el('div', { class: 'git-panel' })
 
     if (!state.projectPath) {
-      panel.appendChild(_renderEmpty('📂', '尚未打开项目\n请先打开一个文件夹'))
+      panel.appendChild(_renderEmpty('', '尚未打开项目\n请先打开一个文件夹'))
       _panelEl.appendChild(panel)
       return
     }
 
     if (!state.isRepo) {
-      panel.appendChild(_renderEmpty('🌿', '此项目未初始化 Git\n请在终端运行 git init 初始化'))
+      panel.appendChild(_renderEmpty('', '此项目未初始化 Git\n请在终端运行 git init 初始化'))
       _panelEl.appendChild(panel)
       return
     }
@@ -271,7 +271,7 @@
 
   function _renderBranchInfo() {
     const el = DOM.el('div', { class: 'git-branch-info' })
-    el.appendChild(DOM.el('span', { class: 'git-branch-icon' }, '🌿'))
+    el.appendChild(DOM.el('span', { class: 'git-branch-icon' }, ''))
     el.appendChild(DOM.el('span', { class: 'git-branch-name' }, state.currentBranch || 'HEAD'))
     if (state.ahead > 0 || state.behind > 0) {
       const track = []
@@ -415,9 +415,9 @@
 
     const btn = DOM.el('button', { class: 'git-commit-btn' })
     if (staged.length > 0) {
-      btn.innerHTML = '<span>✓</span> 提交 <span class="git-commit-badge">' + staged.length + '</span>'
+      btn.innerHTML = '<span>提交</span> <span class="git-commit-badge">' + staged.length + '</span>'
     } else {
-      btn.innerHTML = '<span>✓</span> 提交'
+      btn.innerHTML = '<span>提交</span>'
     }
     btn.disabled = !state.commitMsg.trim() || staged.length === 0
     btn.addEventListener('click', () => _doCommit())
@@ -488,7 +488,7 @@
     // 当前分支
     state.branchList.forEach(b => {
       const item = DOM.el('div', { class: 'git-branch-item' + (b === state.currentBranch ? ' current' : '') })
-      item.appendChild(DOM.el('span', {}, (b === state.currentBranch ? '✓ ' : '  ') + b))
+      item.appendChild(DOM.el('span', {}, (b === state.currentBranch ? '> ' : '  ') + b))
       if (b !== state.currentBranch) {
         item.addEventListener('click', () => _checkoutBranch(b))
       }

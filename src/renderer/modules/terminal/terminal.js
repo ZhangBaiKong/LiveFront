@@ -1,4 +1,4 @@
-﻿/* LiveFront 缁堢绠＄悊鍣?*/
+/* LiveFront 终端管理器*/
 (function () {
   const terminals = new Map()
   let activeTermId = null
@@ -9,7 +9,7 @@
   let resizeObserver = null
   let isInitialized = false
 
-  // xterm 閰嶈壊鏂规
+  // xterm 配色方案
   const TERM_THEME = {
     background: '#0c0c0e',
     foreground: '#eaeaed',
@@ -26,7 +26,7 @@
     white: '#eaeaed'
   }
 
-  // ============ 鍒涘缓 xterm 瀹炰緥 ============
+  // ============ 创建 xterm 实例 ============
   async function createXTerm(container) {
     const { Terminal } = await import('xterm')
     const { FitAddon } = await import('@xterm/addon-fit')
@@ -46,7 +46,7 @@
     const fitAddon = new FitAddon()
     term.loadAddon(fitAddon)
 
-    // 灏濊瘯鍔犺浇 WebglAddon
+    // 尝试加载 WebglAddon
     try {
       const { WebglAddon } = await import('@xterm/addon-webgl')
       const webglAddon = new WebglAddon()
@@ -61,7 +61,7 @@
     return { term, fitAddon }
   }
 
-  // ============ 鍒涘缓缁堢杩涚▼ ============
+  // ============ 创建终端进程 ============
   async function createTerminalProcess(cwd) {
     try {
       const result = await LiveFront.Services.terminal.create({ cwd })
@@ -72,7 +72,7 @@
     }
   }
 
-  // ============ 娓叉煋 UI ============
+  // ============ 渲染 UI ============
   function renderUI() {
     if (!containerEl) return
 
@@ -87,19 +87,19 @@
     tabContainerEl = containerEl.querySelector('#terminalTabsList')
     termContainerEl = containerEl.querySelector('#terminalContent')
 
-    // + 鎸夐挳浜嬩欢
+    // + 按钮事件
     containerEl.querySelector('#terminalTabAdd').addEventListener('click', () => {
       createTerminal()
     })
 
-    // ResizeObserver 鐩戝惉瀹瑰櫒澶у皬鍙樺寲
+    // ResizeObserver 监听容器大小变化
     resizeObserver = new ResizeObserver(() => {
       fitActiveTerminal()
     })
     resizeObserver.observe(termContainerEl)
   }
 
-  // ============ 娓叉煋鏍囩鏍?============
+  // ============ 渲染标签栏============
   function renderTabs() {
     if (!tabContainerEl) return
     tabContainerEl.innerHTML = ''
@@ -137,12 +137,12 @@
     }
   }
 
-  // ============ 鍒涘缓鏂扮粓绔?============
+  // ============ 创建新终端============
   async function createTerminal(cwd) {
     termCounter++
     const index = termCounter
 
-    // 鍒涘缓 xterm 瀹炰緥
+    // 创建 xterm 实例
     const termDiv = document.createElement('div')
     termDiv.className = 'terminal-instance'
     termDiv.style.display = 'none'
@@ -150,7 +150,7 @@
 
     const { term, fitAddon } = await createXTerm(termDiv)
 
-    // 鍒涘缓缁堢杩涚▼
+    // 创建终端进程
     const termId = await createTerminalProcess(cwd || LiveFront.state.currentProjectPath)
 
     if (!termId) {
@@ -170,17 +170,17 @@
 
     terminals.set(termId, termData)
 
-    // xterm 鏁版嵁 鈫?鍐欏叆缁堢杩涚▼
+    // xterm 数据 → 写入终端进程
     term.onData((data) => {
       LiveFront.Services.terminal.write(termId, data)
     })
 
-    // 缁堢杩涚▼鏁版嵁
+    // 终端进程数据
     const onDataCleanup = LiveFront.Services.terminal.onData(({ termId: tid, data }) => {
       if (tid === termId) term.write(data)
     })
 
-    // 缁堢杩涚▼閫€鍑?
+    // 终端进程退出
     const onExitCleanup = LiveFront.Services.terminal.onExit(({ termId: tid, exitCode }) => {
       if (tid === termId) {
         term.write('\r\n[Process exited with code ' + exitCode + ']\r\n')
@@ -189,22 +189,22 @@
 
     termData._cleanups = [onDataCleanup, onExitCleanup]
 
-    // 鍒囨崲鍒版缁堢
+    // 切换到此终端
     switchTerminal(termId)
 
-    // 鍒濆 fit
+    // 初始 fit
     setTimeout(() => {
       fitActiveTerminal()
     }, 100)
 
-    // 鍒锋柊鏍囩
+    // 刷新标签
     renderTabs()
 
     LiveFront.EventBus.emit('terminal:created', { termId })
     return termId
   }
 
-  // ============ 鍒囨崲缁堢 ============
+  // ============ 切换终端 ============
   function switchTerminal(termId) {
     if (termId === activeTermId) return
 
@@ -213,46 +213,46 @@
       td.container.style.display = tid === termId ? 'block' : 'none'
     }
 
-    // 鏄剧ず鐩爣缁堢
+    // 显示目标终端
     activeTermId = termId
     const termData = terminals.get(termId)
     if (termData) {
       termData.term.focus()
     }
 
-    // 鍒锋柊鏍囩鏍?
+    // 刷新标签栏
     renderTabs()
 
-    // fit 鑱氱劍
+    // fit 聚焦
     fitActiveTerminal()
   }
 
-  // ============ 鍏抽棴缁堢 ============
+  // ============ 关闭终端 ============
   async function closeTerminal(termId) {
     const termData = terminals.get(termId)
     if (!termData) return
 
-    // 淇濈暀鑷冲皯涓€涓粓绔?
+    // 保留至少一个终端
     if (terminals.size <= 1) {
       return
     }
 
-    // 娓呯悊浜嬩欢
+    // 清理事件
     if (termData._cleanups) {
       termData._cleanups.forEach(fn => fn && fn())
     }
 
-    // kill 缁堢杩涚▼
+    // kill 终端进程
     await LiveFront.Services.terminal.kill(termId)
 
     // dispose xterm
     termData.term.dispose()
     termData.container.remove()
 
-    // 绉婚櫎璁板綍
+    // 移除记录
     terminals.delete(termId)
 
-    // 濡傛灉鍏抽棴鐨勬槸褰撳墠娲昏穬缁堢锛屽垏鎹㈠埌涓嬩竴涓?
+    // 如果关闭的是当前活跃终端，切换到下一个
     if (activeTermId === termId) {
       const firstId = terminals.keys().next().value
       if (firstId) {
@@ -262,14 +262,14 @@
       }
     }
 
-    // 鍒锋柊鏍囩鏍?
+    // 刷新标签栏
     renderTabs()
 
-    // 瑙﹀彂浜嬩欢
+    // 触发事件
     LiveFront.EventBus.emit('terminal:closed', { termId })
   }
 
-  // ============ fit 缁堢 ============
+  // ============ fit 终端 ============
   function fitActiveTerminal() {
     if (!activeTermId) return
     const termData = terminals.get(activeTermId)
@@ -338,9 +338,9 @@
     },
 
     onProjectOpened(projectPath) {
-      // 濡傛灉缁堢宸插瓨鍦紝鍒欎笉鏀寔 cwd 鍒囨崲锛岄渶閲嶅惎
+      // 如果终端已存在，则不支持 cwd 切换，需重启
       if (terminals.size > 0) {
-        // 鍏抽棴鎵€鏈夌粓绔苟閲嶆柊鍒涘缓
+        // 关闭所有终端并重新创建
         for (const [termId] of terminals) {
           closeTerminal(termId)
         }

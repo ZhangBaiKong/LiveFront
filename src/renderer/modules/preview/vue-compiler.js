@@ -1,4 +1,4 @@
-﻿/* LiveFront Vue Compiler — browser-side Vue SFC compilation */
+/* LiveFront Vue Compiler — browser-side Vue SFC compilation */
 window.LiveFront = window.LiveFront || {}
 
 class VueCompiler {

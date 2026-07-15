@@ -1,4 +1,4 @@
-﻿/* LiveFront Preview Manager */
+/* LiveFront Preview Manager */
 window.LiveFront = window.LiveFront || {};
 const __vueRuntimeCache = new Map();
 

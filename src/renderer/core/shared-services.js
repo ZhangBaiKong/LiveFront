@@ -1,4 +1,4 @@
-﻿/* LiveFront 鍏变韩鏈嶅姟 */
+/* LiveFront 鍏变韩鏈嶅姟 */
 window.LiveFront = window.LiveFront || {};
 
 LiveFront.Services = {

@@ -1,4 +1,4 @@
-﻿/* LiveFront React Compiler — browser-side JSX/TSX compilation with Sucrase */
+/* LiveFront React Compiler — browser-side JSX/TSX compilation with Sucrase */
 window.LiveFront = window.LiveFront || {}
 
 class ReactCompiler {

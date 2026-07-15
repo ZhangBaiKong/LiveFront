@@ -206,7 +206,7 @@
     if (AIState.messages.length === 0) {
       const welcome = document.createElement('div')
       welcome.className = 'ai-msg ai-msg-system'
-      welcome.innerHTML = '👋 你好！我是 LiveFront AI 助手。<br>我可以帮助你生成和修改前端代码。<br>当前会自动附带你正在编辑的文件内容。<br><br>💡 提示：选中预览区的元素后发送消息，AI 会知道你在操作哪个元素。'
+      welcome.innerHTML = '你好！我是 LiveFront AI 助手。<br>我可以帮助你生成和修改前端代码。<br>当前会自动附带你正在编辑的文件内容。<br><br>提示：选中预览区的元素后发送消息，AI 会知道你在操作哪个元素。'
       container.appendChild(welcome)
       return
     }
@@ -248,7 +248,7 @@
     const hasCode = text.match(/```(\w*)\n([\s\S]*?)```/g)
     if (hasCode) {
       html += '<div class="ai-apply-all-row">'
-        + '<button class="ai-code-btn ai-code-btn-apply" onclick="LiveFront.AI.applyAll(this)">✓ 应用全部</button>'
+        + '<button class="ai-code-btn ai-code-btn-apply" onclick="LiveFront.AI.applyAll(this)">应用全部</button>'
         + '</div>'
     }
 
@@ -306,12 +306,12 @@
       })
 
       if (result?.error) {
-        AIState.messages[aiMsgIndex].content = '❌ 错误: ' + result.error
+        AIState.messages[aiMsgIndex].content = '错误: ' + result.error
       } else {
         AIState.messages[aiMsgIndex].content = result?.content || '(空回复)'
       }
     } catch (e) {
-      AIState.messages[aiMsgIndex].content = '❌ 请求失败: ' + e.message
+      AIState.messages[aiMsgIndex].content = '请求失败: ' + e.message
     }
 
     AIState.isStreaming = false
@@ -461,7 +461,7 @@
         LiveFront.PanelManager.registerTab({
           id: 'ai',
           label: 'AI',
-          icon: '🤖',
+          icon: '',
           render: (container) => {
             // 根据是否有配置决定显示设置或对话
             if (!hasAnyProviderKey()) {
@@ -485,7 +485,7 @@
       const header = document.createElement('div')
       header.className = 'ai-header'
       header.innerHTML = ''
-        + '<div class="ai-header-left">🤖 AI 对话</div>'
+        + '<div class="ai-header-left">AI 对话</div>'
         + '<div class="ai-header-right">'
         + '  <select class="ai-model-select" id="aiModelSelect">'
         + Object.values(PROVIDERS).flatMap(p => p.models.map(m =>
@@ -494,7 +494,7 @@
           + '>' + p.name + ' ' + m.name + '</option>'
         )).join('')
         + '  </select>'
-        + '  <button class="ai-settings-btn" id="aiSettingsBtn" title="设置">⚙</button>'
+        + '  <button class="ai-settings-btn" id="aiSettingsBtn" title="设置">×</button>'
         + '</div>'
       panel.appendChild(header)
 
@@ -518,7 +518,7 @@
 
       const contextToggle = document.createElement('label')
       contextToggle.className = 'ai-context-toggle'
-      contextToggle.innerHTML = '<input type="checkbox" id="aiContextToggle" ' + (AIState.attachContext ? 'checked' : '') + '> 📎 附加当前文件上下文'
+      contextToggle.innerHTML = '<input type="checkbox" id="aiContextToggle" ' + (AIState.attachContext ? 'checked' : '') + '> 附加当前文件上下文'
       inputArea.appendChild(contextToggle)
 
       const inputRow = document.createElement('div')
@@ -545,7 +545,7 @@
       actionsRow.className = 'ai-input-actions'
       const clearBtn = document.createElement('button')
       clearBtn.className = 'ai-clear-btn'
-      clearBtn.textContent = '🗑 清空对话'
+      clearBtn.textContent = '清空对话'
       clearBtn.addEventListener('click', () => {
         if (AIState.messages.length === 0) return
         if (!confirm('确定清空对话历史？')) return
@@ -603,9 +603,9 @@
       const active = LiveFront.Editor?.getActivePath()
       if (active) {
         const entry = LiveFront.Editor.getEntry(active)
-        el.innerHTML = '<span class="ai-active-file-icon">📎</span> 当前文件: ' + (entry?.name || active.split(/[/\\]/).pop())
+        el.innerHTML = '当前文件: ' + (entry?.name || active.split(/[/\\]/).pop())
       } else {
-        el.innerHTML = '<span class="ai-active-file-icon">📎</span> 当前文件: (无)'
+        el.innerHTML = '当前文件: (无)'
       }
     },
 
@@ -616,7 +616,7 @@
 
       const models = getUserModels()
 
-      let html = '<h3>AI Model Settings</h3>'
+      let html = '<h3>AI 模型设置</h3>'
 
       // Quick-config presets
       const PRESETS = [
@@ -625,7 +625,7 @@
       ]
 
       html += '<div style="margin-bottom:16px;">'
-        + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Quick Config</div>'
+        + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">快速配置</div>'
         + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
       for (const preset of PRESETS) {
         html += '<button class="ai-preset-btn" data-preset="' + preset.id + '" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-secondary);cursor:pointer;font-size:12px;color:var(--text);transition:all 0.15s;">'
@@ -636,45 +636,45 @@
       // Add model form
       html += '<div style="border-top:1px solid var(--border);padding-top:12px;">'
       html += '<div class="ai-settings-group">'
-        + '<label>Name:</label>'
-        + '<input type="text" id="aiModelName" placeholder="e.g. MiMo AI Studio">'
+        + '<label>名称：</label>'
+        + '<input type="text" id="aiModelName" placeholder="如：MiMo AI Studio">'
         + '</div>'
       html += '<div class="ai-settings-group">'
-        + '<label>Base URL:</label>'
-        + '<input type="text" id="aiModelBaseUrl" placeholder="e.g. https://aistudio.xiaomimimo.com/v1">'
-        + '<div style="font-size:10px;color:var(--text-muted);">API endpoint (OpenAI compatible)</div>'
+        + '<label>API 地址：</label>'
+        + '<input type="text" id="aiModelBaseUrl" placeholder="如：https://aistudio.xiaomimimo.com/v1">'
+        + '<div style="font-size:10px;color:var(--text-muted);">API 端点（OpenAI 兼容格式）</div>'
         + '</div>'
       html += '<div class="ai-settings-group">'
-        + '<label>API Key:</label>'
+        + '<label>API Key：</label>'
         + '<input type="password" id="aiModelApiKey" placeholder="sk-...">'
-        + '<div style="font-size:10px;color:var(--text-muted);">Stored locally, never uploaded.</div>'
+        + '<div style="font-size:10px;color:var(--text-muted);">本地存储，不会上传。</div>'
         + '</div>'
       html += '<div class="ai-settings-group">'
-        + '<label>Model ID:</label>'
-        + '<input type="text" id="aiModelId" placeholder="e.g. mimo-v2.5-pro, deepseek-chat">'
+        + '<label>模型 ID：</label>'
+        + '<input type="text" id="aiModelId" placeholder="如：mimo-v2.5-pro, deepseek-chat">'
         + '</div>'
 
       html += '<div style="margin-top:12px;">'
-        + '<button class="btn btn-primary" id="aiModelAdd" style="width:100%;">Add Model</button>'
+        + '<button class="btn btn-primary" id="aiModelAdd" style="width:100%;">添加模型</button>'
         + '</div>'
       html += '</div>'
 
       // Configured models list
       html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">'
-        + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Configured Models</div>'
+        + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">已配置的模型</div>'
 
       if (models.length === 0) {
-        html += '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">No models configured yet.</div>'
+        html += '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">尚未配置任何模型</div>'
       }
 
       const activeId = localStorage.getItem('livefront_ai_active_model')
       for (const m of models) {
         const isActive = m.id === activeId
         html += '<div class="ai-provider-row">'
-          + '<span>' + (isActive ? '&#9654;' : '&#9675;') + ' ' + (m.name || 'Unnamed') + ' <span style="opacity:0.5;font-size:10px;">' + (m.modelId || '') + '</span></span>'
+          + '<span>' + (isActive ? '&#9654;' : '&#9675;') + ' ' + (m.name || '未命名') + ' <span style="opacity:0.5;font-size:10px;">' + (m.modelId || '') + '</span></span>'
           + '<div class="ai-provider-actions">'
-          + (isActive ? '' : '<button class="ai-provider-btn" data-action="activate" data-id="' + m.id + '">Use</button>')
-          + '<button class="ai-provider-btn ai-provider-btn-danger" data-action="delete-model" data-id="' + m.id + '">Delete</button>'
+          + (isActive ? '' : '<button class="ai-provider-btn" data-action="activate" data-id="' + m.id + '">使用</button>')
+          + '<button class="ai-provider-btn ai-provider-btn-danger" data-action="delete-model" data-id="' + m.id + '">删除</button>'
           + '</div>'
           + '</div>'
       }
@@ -715,7 +715,7 @@
           return
         }
 
-        const model = { id: Date.now().toString(), name: name || modelId || 'Model', baseUrl, apiKey, modelId }
+        const model = { id: Date.now().toString(), name: name || modelId || '模型', baseUrl, apiKey, modelId }
         const models = getUserModels()
         models.push(model)
         setUserModels(models)
@@ -750,7 +750,7 @@
           let models = getUserModels()
           const m = models.find(x => x.id === id)
           if (!m) return
-          if (!confirm('Delete model "' + (m.name || m.modelId) + '"?')) return
+          if (!confirm('确认删除模型 "' + (m.name || m.modelId) + '" 吗？')) return
           models = models.filter(x => x.id !== id)
           setUserModels(models)
           if (localStorage.getItem('livefront_ai_active_model') === id) {
@@ -811,8 +811,8 @@
       }
       applyNext(0)
 
-      btn.textContent = '✓ 已应用'
-      setTimeout(() => { btn.textContent = '✓ 应用全部' }, 1500)
+      btn.textContent = '已应用'
+      setTimeout(() => { btn.textContent = '应用全部' }, 1500)
     },
     sendMessage,
     AIState

@@ -1,4 +1,4 @@
-﻿/* LiveFront Framework Detector — lightweight project classification */
+/* LiveFront Framework Detector — lightweight project classification */
 window.LiveFront = window.LiveFront || {}
 
 class FrameworkDetector {

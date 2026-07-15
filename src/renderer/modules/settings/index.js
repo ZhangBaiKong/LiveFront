@@ -1,4 +1,4 @@
-﻿/* LiveFront Settings module */
+/* LiveFront Settings module */
 import './settings.css'
 
 const STORAGE_KEY = 'livefront_settings'
@@ -427,7 +427,7 @@ function renderAgentIntegration(container) {
     <div class="settings-section">
       <div class="settings-section-title">已安装的 Agent</div>
       <div class="settings-row" style="gap:8px; align-items:center;">
-        <button class="btn btn-primary" id="agentScanBtn">🔍 一键扫描</button>
+        <button class="btn btn-primary" id="agentScanBtn">一键扫描</button>
         <span class="settings-secondary" id="agentScanStatus"></span>
       </div>
       <div class="settings-table" id="agentScanTable"></div>
@@ -457,12 +457,12 @@ function renderAgentIntegration(container) {
       <div class="settings-section-title">LiveFront MCP 配置</div>
       <div class="settings-hint">LiveFront 作为 MCP Server 运行后，其他 AI Agent 可以通过以下配置连接。</div>
       <div class="settings-row" style="gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-ghost" id="mcpCopyClaude">📋 Claude Desktop</button>
-        <button class="btn btn-ghost" id="mcpCopyCursor">📋 Cursor</button>
-        <button class="btn btn-ghost" id="mcpCopyGeneric">📋 通用 JSON</button>
-        <button class="btn btn-ghost" id="mcpExportClaude">⬇️ 导出 Claude</button>
-        <button class="btn btn-ghost" id="mcpExportCursor">⬇️ 导出 Cursor</button>
-        <button class="btn btn-ghost" id="mcpExportGeneric">⬇️ 导出通用</button>
+        <button class="btn btn-ghost" id="mcpCopyClaude">Claude Desktop</button>
+        <button class="btn btn-ghost" id="mcpCopyCursor">Cursor</button>
+        <button class="btn btn-ghost" id="mcpCopyGeneric">通用 JSON</button>
+        <button class="btn btn-ghost" id="mcpExportClaude">导出 Claude</button>
+        <button class="btn btn-ghost" id="mcpExportCursor">导出 Cursor</button>
+        <button class="btn btn-ghost" id="mcpExportGeneric">导出通用</button>
       </div>
       <div class="settings-hint">导入前会先解析配置，确认后批量添加选中的 Server。</div>
       <div id="mcpImportPreview"></div>
@@ -640,8 +640,8 @@ function renderAgentIntegration(container) {
   }
 
   function statusIcon(status) {
-    if (status === 'installed' || status === 'configured' || status === 'running') return '✅'
-    return '⚠️'
+    if (status === 'installed' || status === 'configured' || status === 'running') return '[OK]'
+    return '[!]'
   }
 
   scanBtn.addEventListener('click', refreshScanResults)

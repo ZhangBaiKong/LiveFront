@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const { spawn } = require('child_process');
 const { URL } = require('url');
 

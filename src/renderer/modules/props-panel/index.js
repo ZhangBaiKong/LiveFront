@@ -29,7 +29,7 @@
       this._ctx = ctx
       this._selectedElement = null
 
-      // 鏇挎崲榛樿鐨?灞炴€?Tab 涓烘垜浠殑瀹炵幇
+      // 替换默认的属性 Tab 为我们的实现
       ctx.eventBus.on('element:selected', (data) => {
         console.log('[PropsPanel] element:selected received:', data.tagName, data.selector);
         this._selectedElement = data
@@ -38,15 +38,15 @@
 
       ctx.eventBus.on('element:deselected', () => {
         this._selectedElement = null
-      // ??????? Tab ??????
+      // 替换默认的属性 Tab 为我们的实现
       })
 
-      // ??????????? Phase 0 ???? Tab?
+      // 注册 Phase 0 事件 Tab 内容
       if (LiveFront.PanelManager) {
         LiveFront.PanelManager.registerTab({
           id: 'props',
           label: '属性',
-          icon: '🎨',
+          icon: '',
           render: (container) => this._renderPanel(container)
         })
       }
@@ -67,9 +67,8 @@
       if (!this._selectedElement) {
         this._panelContainer.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted);gap:8px;padding:20px;text-align:center;">
-            <div style="font-size:24px;opacity:0.5;">馃帹</div>
-            <div style="font-size:24px;opacity:0.5;">??</div>
-            <div style="font-size:12px;">?????????<br>????????</div>
+            <div style="font-size:24px;opacity:0.5;"></div>
+            <div style="font-size:12px;">请在预览区点击元素<br>以查看和编辑属性</div>
         `
         return
       }
@@ -77,20 +76,19 @@
       const el = this._selectedElement
       const cs = el.computedStyles || {}
 
-      // ??????
+      // 元素信息卡
       const infoCard = document.createElement('div')
 
       infoCard.innerHTML = `
         <div style="font-size:18px;font-weight:700;color:var(--accent);margin-bottom:4px;">${el.tagName}</div>
         <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:8px;">${el.selector}</div>
         <div style="font-size:11px;color:var(--text-secondary);display:flex;gap:16px;">
-          <span>灏哄: ${el.rect.width} 脳 ${el.rect.height}</span>
-          <span>??: ${el.rect.width} ? ${el.rect.height}</span>
-          <span>??: ${el.rect.x}, ${el.rect.y}</span>
+          <span>尺寸: ${el.rect.width} × ${el.rect.height}</span>
+          <span>位置: ${el.rect.x}, ${el.rect.y}</span>
       `
       this._panelContainer.appendChild(infoCard)
 
-      // ???
+      // 排版
       const props = document.createElement('div')
 
 
@@ -161,7 +159,7 @@
         row.appendChild(label)
 
         if (prop.type === 'color' && this._isColorValue(prop.value)) {
-          // 棰滆壊閫夋嫨鍣?
+          // 颜色选择器
           const colorBtn = document.createElement('button')
           colorBtn.style.cssText = 'width:24px;height:24px;border-radius:4px;border:1px solid var(--border);cursor:pointer;flex-shrink:0;background:' + (prop.value || 'transparent') + ';'
           colorBtn.title = prop.value
@@ -183,7 +181,7 @@
           colorBtn.addEventListener('click', () => colorInput.click())
           row.appendChild(colorWrap)
 
-          // hex 杈撳叆
+          // hex 输入
           const hexInput = document.createElement('input')
           hexInput.value = prop.value || ''
           hexInput.style.cssText = 'flex:1;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:3px;padding:3px 6px;font-size:11px;font-family:var(--font-mono);color:var(--text-primary);min-width:0;'

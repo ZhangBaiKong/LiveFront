@@ -16,8 +16,22 @@ class LiveFrontMcpServer {
     this.port = port || this.port;
     this.server = http.createServer((req, res) => this.handleRequest(req, res));
     return new Promise((resolve, reject) => {
+      this.server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          const fallback = this.port + 2; // 9528 -> 9530
+          console.warn('[MCP] Port ' + this.port + ' in use, trying ' + fallback);
+          this.server.close();
+          this.server = http.createServer((req, res) => this.handleRequest(req, res));
+          this.server.on('error', (e2) => reject(e2));
+          this.server.listen(fallback, '127.0.0.1', () => {
+            this.port = fallback;
+            resolve({ port: this.port });
+          });
+        } else {
+          reject(err);
+        }
+      });
       this.server.listen(this.port, '127.0.0.1', () => resolve({ port: this.port }));
-      this.server.on('error', reject);
     });
   }
 

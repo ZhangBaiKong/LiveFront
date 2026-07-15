@@ -101,9 +101,9 @@
         }
         return '<div class="materials-preview-code">...</div>';
       case 'image':
-        return '<div style="font-size:32px">🖼️</div>';
+        return '<div style="font-size:32px">[img]</div>';
       default:
-        return '<div style="font-size:32px">📦</div>';
+        return '<div style="font-size:32px">[file]</div>';
     }
   }
 
@@ -121,7 +121,7 @@
     if (countEl) countEl.textContent = materials.length + ' 个素材';
 
     if (materials.length === 0) {
-      container.innerHTML = '<div class="materials-empty"><div class="materials-empty-icon">🔍</div><div class="materials-empty-text">没有找到匹配的素材</div></div>';
+      container.innerHTML = '<div class="materials-empty"><div class="materials-empty-icon"></div><div class="materials-empty-text">没有找到匹配的素材</div></div>';
       return;
     }
 
@@ -266,7 +266,7 @@
         '</div>' +
         '<div class="materials-filter">' +
           '<div class="materials-search-box">' +
-            '<span class="materials-search-icon">🔍</span>' +
+            '<span class="materials-search-icon"></span>' +
             '<input class="materials-search-input" id="materialsSearch" placeholder="搜索素材...">' +
           '</div>' +
           '<span class="materials-count" id="materialsCount"></span>' +
