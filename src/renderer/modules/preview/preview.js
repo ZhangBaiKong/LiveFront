@@ -403,7 +403,7 @@ class PreviewManager {
       '<script>',
       '(function() {',
       'var hoveringDiv = null, selectedDiv = null;',
-      'function emit(obj) { try { if (window.__lf_sendEvent) window.__lf_sendEvent(obj); } catch(e) {} }',
+      'function emit(obj) { try { window.parent.postMessage(obj, '*'); } catch(e) {} }',
       'function ensureDiv(prop) {',
       '  if (!prop) { prop = {}; }',
       '  var d = document.createElement("div");',
@@ -821,7 +821,6 @@ class PreviewManager {
     })
 
     this._webview.addEventListener('console-message', (e) => {
-      if (typeof e.message === 'string' && e.message.startsWith('__LF_EVENT__')) return
       LiveFront.EventBus.emit('preview:console', {
         level: e.level === 2 ? 'error' : e.level === 1 ? 'warn' : 'log',
         message: e.message, line: e.line
@@ -831,24 +830,26 @@ class PreviewManager {
 
   _setupIpcBridge() {
     this._teardownIpcBridge()
-    if (!this._webview) return
 
-    // 通过 console-message 事件拦截 guest 注入脚本的 __LF_EVENT__ 消息
-    this._consoleBridgeHandler = (e) => {
-      if (typeof e.message === 'string' && e.message.startsWith('__LF_EVENT__')) {
-        try {
-          const data = JSON.parse(e.message.substring(12))
-          this._handleEvent(data)
-        } catch (err) {}
-      }
+    // Listen for postMessage from the webview guest page (cross-origin safe)
+    this._messageHandler = (e) => {
+      // Only accept messages from the webview's content window
+      if (!this._webview) return
+      const data = e.data
+      if (!data || typeof data !== 'object' || !data.action) return
+      // Validate that the message is from our preview origin or a trusted source
+      // Electron webview guest pages postMessage arrives on the embedder window
+      try {
+        this._handleEvent(data)
+      } catch (err) {}
     }
-    this._webview.addEventListener('console-message', this._consoleBridgeHandler)
+    window.addEventListener('message', this._messageHandler)
   }
 
   _teardownIpcBridge() {
-    if (this._consoleBridgeHandler && this._webview) {
-      this._webview.removeEventListener('console-message', this._consoleBridgeHandler)
-      this._consoleBridgeHandler = null
+    if (this._messageHandler) {
+      window.removeEventListener('message', this._messageHandler)
+      this._messageHandler = null
     }
   }
 

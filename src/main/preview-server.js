@@ -148,7 +148,7 @@ function getInjectedScript() {
     positionOverlay(_selectedOverlay, el);
 
     const info = getElementInfo(el);
-    window.parent.postMessage(info, '*'); console.info('__LF_EVENT__' + JSON.stringify(info));
+    window.parent.postMessage(info, '*');
   }, true);
 
   // ESC 取消选中
@@ -156,7 +156,7 @@ function getInjectedScript() {
     if (e.key === 'Escape') {
       if (_selectedOverlay) { _selectedOverlay.style.width = '0'; _selectedOverlay.style.height = '0'; }
       _selectedEl = null;
-      window.parent.postMessage({ action: 'element-deselected' }, '*'); console.info('__LF_EVENT__' + JSON.stringify({ action: 'element-deselected' }));
+      window.parent.postMessage({ action: 'element-deselected' }, '*');
     }
   });
 
@@ -178,12 +178,12 @@ function getInjectedScript() {
         const args = Array.from(arguments).map(a => {
           try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch(e) { return String(a); }
         });
-        window.parent.postMessage({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() }, '*'); console.info('__LF_EVENT__' + JSON.stringify({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() }));
+        window.parent.postMessage({ action: 'console', level: level, content: args.join(' '), timestamp: Date.now() }, '*');
       } catch(e) {}
     };
   });
 
-  window.parent.postMessage({ action: 'preview-ready' }, '*'); console.info('__LF_EVENT__' + JSON.stringify({ action: 'preview-ready' }));
+  window.parent.postMessage({ action: 'preview-ready' }, '*');
 })();
 </script>
 `
