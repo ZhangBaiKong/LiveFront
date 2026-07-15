@@ -1,6 +1,4 @@
-/* LiveFront Settings module */
-import './settings.css'
-
+﻿/* LiveFront Settings module */
 const STORAGE_KEY = 'livefront_settings'
 
 function defaultSettings() {
@@ -125,8 +123,8 @@ function openSettings(initialSection) {
 }
 
 function renderCodeSources(container) {
-  const settings = LiveFront.Services.settings.getAll()
-  const codeSources = settings.codeSources || defaultSettings().codeSources
+  const baseSettings = LiveFront.Services.settings.getAll()
+  const codeSources = baseSettings.codeSources || defaultSettings().codeSources
 
   container.innerHTML = `
     <div class="settings-section">
@@ -139,563 +137,345 @@ function renderCodeSources(container) {
         </div>
       </div>
       <div class="settings-row">
-        <div class="settings-label">监听文件类型</div>
-        <div class="settings-control settings-tags" id="csFileTypes"></div>
+        <div class="settings-label">监听类型</div>
+        <div class="settings-control" id="csWatchTypes"></div>
       </div>
       <div class="settings-row">
-        <div class="settings-label">检测到新文件时</div>
-        <div class="settings-control settings-radio-group" id="csNewFileBehavior"></div>
+        <div class="settings-label">新文件行为</div>
+        <div class="settings-control" id="csNewFileBehavior"></div>
       </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">剪贴板监听</div>
       <div class="settings-row">
-        <div class="settings-label">复制代码时</div>
-        <div class="settings-control settings-radio-group" id="csClipboardBehavior"></div>
+        <div class="settings-label">复制到剪贴板</div>
+        <div class="settings-control" id="csClipboard"></div>
       </div>
     </div>
-
     <div class="settings-section">
-      <div class="settings-section-title">自动格式识别</div>
+      <div class="settings-section-title">格式支持</div>
       <div class="settings-row">
-        <div class="settings-label">识别格式</div>
-        <div class="settings-control settings-tags" id="csAutoFormats"></div>
+        <div class="settings-label">启用格式</div>
+        <div class="settings-control" id="csFormats"></div>
       </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">本地 API</div>
       <div class="settings-row">
-        <div class="settings-label">端口</div>
+        <div class="settings-label">API 端口</div>
         <div class="settings-control">
-          <input class="settings-input" id="csApiPort" type="number" min="1024" max="65535" value="${codeSources.apiPort || 9527}" />
+          <input class="settings-input" id="csApiPort" value="${codeSources.apiPort || 9527}" />
         </div>
       </div>
     </div>
   `
 
-  const fileTypeTags = container.querySelector('#csFileTypes')
-  const allFileTypes = ['html', 'css', 'js', 'jsx', 'vue', 'tsx', 'ts', 'json', 'md', 'svg']
-  fileTypeTags.innerHTML = allFileTypes.map(type => `
-    <span class="settings-tag-toggle ${(codeSources.watchFileTypes || []).includes(type) ? 'active' : ''}" data-type="${type}">${type}</span>
-  `).join('')
-  fileTypeTags.addEventListener('click', e => {
-    const tag = e.target.closest('.settings-tag-toggle')
-    if (!tag) return
-    tag.classList.toggle('active')
-    const next = loadSettings()
-    next.codeSources.watchFileTypes = [...fileTypeTags.querySelectorAll('.settings-tag-toggle.active')].map(el => el.dataset.type)
-    saveSettings(next)
-  })
+  const typesEl = container.querySelector('#csWatchTypes')
+  const fileTypes = defaultSettings().codeSources.watchFileTypes
+  for (const ft of fileTypes) {
+    const tag = document.createElement('span')
+    tag.className = `settings-tag ${codeSources.watchFileTypes.includes(ft) ? 'active' : ''}`
+    tag.textContent = ft
+    tag.addEventListener('click', () => {
+      const nextSettings = LiveFront.Services.settings.getAll()
+      const current = nextSettings.codeSources.watchFileTypes || []
+      nextSettings.codeSources.watchFileTypes = current.includes(ft) ? current.filter(x => x !== ft) : [...current, ft]
+      tag.classList.toggle('active')
+      LiveFront.Services.settings.set('codeSources', nextSettings.codeSources)
+    })
+    typesEl.appendChild(tag)
+  }
 
-  const newFileGroup = container.querySelector('#csNewFileBehavior')
-  const newFileOptions = [
-    { value: 'auto', label: '自动导入' },
-    { value: 'prompt', label: '提示导入' },
-    { value: 'ignore', label: '忽略' }
-  ]
-  newFileGroup.innerHTML = newFileOptions.map(option => `
-    <label class="settings-radio">
-      <input type="radio" name="csNewFile" value="${option.value}" ${codeSources.onNewFile === option.value ? 'checked' : ''} />
-      <span>${option.label}</span>
-    </label>
-  `).join('')
-  newFileGroup.addEventListener('change', e => {
-    if (e.target.name !== 'csNewFile') return
-    const next = loadSettings()
-    next.codeSources.onNewFile = e.target.value
-    saveSettings(next)
-  })
+  const newFileEl = container.querySelector('#csNewFileBehavior')
+  for (const opt of [{ value: 'auto', label: '自动打开' }, { value: 'prompt', label: '每次询问' }, { value: 'ignore', label: '忽略' }]) {
+    const radio = document.createElement('span')
+    radio.className = `settings-radio ${codeSources.onNewFile === opt.value ? 'active' : ''}`
+    radio.textContent = opt.label
+    radio.addEventListener('click', () => {
+      const nextSettings = LiveFront.Services.settings.getAll()
+      nextSettings.codeSources.onNewFile = opt.value
+      newFileEl.querySelectorAll('.settings-radio').forEach(el => el.classList.remove('active'))
+      radio.classList.add('active')
+      LiveFront.Services.settings.set('codeSources', nextSettings.codeSources)
+    })
+    newFileEl.appendChild(radio)
+  }
 
-  const clipboardGroup = container.querySelector('#csClipboardBehavior')
-  const clipboardOptions = [
-    { value: 'auto', label: '自动导入' },
-    { value: 'prompt', label: '提示导入' },
-    { value: 'ignore', label: '忽略' }
-  ]
-  clipboardGroup.innerHTML = clipboardOptions.map(option => `
-    <label class="settings-radio">
-      <input type="radio" name="csClipboard" value="${option.value}" ${codeSources.clipboardOnCopy === option.value ? 'checked' : ''} />
-      <span>${option.label}</span>
-    </label>
-  `).join('')
-  clipboardGroup.addEventListener('change', e => {
-    if (e.target.name !== 'csClipboard') return
-    const next = loadSettings()
-    next.codeSources.clipboardOnCopy = e.target.value
-    saveSettings(next)
-  })
+  const clipboardEl = container.querySelector('#csClipboard')
+  for (const opt of [{ value: 'prompt', label: '询问' }, { value: 'auto', label: '自动' }, { value: 'off', label: '关闭' }]) {
+    const radio = document.createElement('span')
+    radio.className = `settings-radio ${codeSources.clipboardOnCopy === opt.value ? 'active' : ''}`
+    radio.textContent = opt.label
+    radio.addEventListener('click', () => {
+      const nextSettings = LiveFront.Services.settings.getAll()
+      nextSettings.codeSources.clipboardOnCopy = opt.value
+      clipboardEl.querySelectorAll('.settings-radio').forEach(el => el.classList.remove('active'))
+      radio.classList.add('active')
+      LiveFront.Services.settings.set('codeSources', nextSettings.codeSources)
+    })
+    clipboardEl.appendChild(radio)
+  }
 
-  const autoFormats = container.querySelector('#csAutoFormats')
-  const allFormats = ['HTML', 'JSX', 'Vue', 'CSS', 'Svelte', 'Markdown']
-  autoFormats.innerHTML = allFormats.map(format => `
-    <span class="settings-tag-toggle ${(codeSources.autoFormats || []).includes(format) ? 'active' : ''}" data-format="${format}">${format}</span>
-  `).join('')
-  autoFormats.addEventListener('click', e => {
-    const tag = e.target.closest('.settings-tag-toggle')
-    if (!tag) return
-    tag.classList.toggle('active')
-    const next = loadSettings()
-    next.codeSources.autoFormats = [...autoFormats.querySelectorAll('.settings-tag-toggle.active')].map(el => el.dataset.format)
-    saveSettings(next)
-  })
-
-  const portInput = container.querySelector('#csApiPort')
-  portInput.addEventListener('change', () => {
-    const next = loadSettings()
-    next.codeSources.apiPort = Math.max(1024, Math.min(65535, Number(portInput.value) || 9527))
-    saveSettings(next)
-  })
-
-  const dirInput = container.querySelector('#csWatchDir')
-  dirInput.addEventListener('change', () => {
-    const next = loadSettings()
-    next.codeSources.watchDir = dirInput.value.trim()
-    saveSettings(next)
-  })
+  const formatsEl = container.querySelector('#csFormats')
+  const allFormats = ['HTML', 'JSX', 'Vue', 'CSS']
+  for (const fmt of allFormats) {
+    const tag = document.createElement('span')
+    tag.className = `settings-tag ${(codeSources.autoFormats || []).includes(fmt) ? 'active' : ''}`
+    tag.textContent = fmt
+    tag.addEventListener('click', () => {
+      const nextSettings = LiveFront.Services.settings.getAll()
+      const current = nextSettings.codeSources.autoFormats || []
+      nextSettings.codeSources.autoFormats = current.includes(fmt) ? current.filter(x => x !== fmt) : [...current, fmt]
+      tag.classList.toggle('active')
+      LiveFront.Services.settings.set('codeSources', nextSettings.codeSources)
+    })
+    formatsEl.appendChild(tag)
+  }
 
   container.querySelector('#csBrowseDir').addEventListener('click', async () => {
-    const folder = await LiveFront.Services.dialog.openFolder()
-    if (!folder) return
-    dirInput.value = folder
-    const next = loadSettings()
-    next.codeSources.watchDir = folder
-    saveSettings(next)
+    const dir = await LiveFront.Services.dialog.openFolder()
+    if (!dir) return
+    container.querySelector('#csWatchDir').value = dir
+    const nextSettings = LiveFront.Services.settings.getAll()
+    nextSettings.codeSources.watchDir = dir
+    LiveFront.Services.settings.set('codeSources', nextSettings.codeSources)
+  })
+
+  container.querySelector('#csApiPort').addEventListener('change', e => {
+    const nextSettings = LiveFront.Services.settings.getAll()
+    nextSettings.codeSources.apiPort = Number(e.target.value) || 9527
+    LiveFront.Services.settings.set('codeSources', nextSettings.codeSources)
   })
 }
 
 function renderDialogManager(container) {
-  const settings = LiveFront.Services.settings.getAll()
-  const dialogs = Array.isArray(settings.dialogs) ? [...settings.dialogs] : []
+  const dialogSettings = LiveFront.Services.settings.getAll()
+  const dialogList = dialogSettings.dialogs || []
 
   container.innerHTML = `
     <div class="settings-section">
-      <div class="settings-section-title">AI 回传配置</div>
-      <div class="settings-hint">配置 AI 对话后，可在修改线中将修改摘要发送回对应的 AI 工具。</div>
-      <div class="settings-table" id="dialogTable"></div>
-      <div class="settings-row" style="justify-content:flex-end;">
-        <button class="btn btn-primary" id="dialogAddBtn">添加 AI 对话</button>
+      <div class="settings-section-title">AI 回传管理</div>
+      <div class="settings-hint">当工具从 AI 接收到代码片段时，可以记录到本地对话，便于后续整理与回放。</div>
+      <div class="settings-toolbar">
+        <button class="btn btn-ghost" id="dmAdd">新增对话</button>
       </div>
+      <div class="settings-table" id="dmTable">
+        <div class="settings-table-header">
+          <span>名称</span>
+          <span>来源</span>
+          <span>最后更新</span>
+          <span>条目数</span>
+          <span>操作</span>
+        </div>
+      </div>
+      <div id="dmEmpty" class="settings-empty ${dialogList.length ? '' : ''}">暂无对话记录</div>
     </div>
   `
 
-  const table = container.querySelector('#dialogTable')
+  const tableEl = container.querySelector('#dmTable')
+  const emptyEl = container.querySelector('#dmEmpty')
 
-  function renderTable() {
-    if (!dialogs.length) {
-      table.innerHTML = '<div class="settings-empty">暂未配置 AI 对话</div>'
-      return
-    }
-
-    table.innerHTML = `
-      <div class="settings-table-header">
-        <div>名称</div>
-        <div>类型</div>
-        <div>标识</div>
-        <div>状态</div>
-        <div>操作</div>
-      </div>
-      ${dialogs.map(dialog => `
-        <div class="settings-table-row" data-id="${dialog.id}">
-          <div>${dialog.name || '未命名对话'}</div>
-          <div><span class="settings-tag">${dialog.type || 'other'}</span></div>
-          <div class="settings-secondary">${dialog.identifier || '-'}</div>
-          <div><span class="settings-status ${dialog.status || 'active'}">${dialog.status || 'active'}</span></div>
-          <div class="settings-actions">
-            <button class="btn btn-ghost" data-action="edit" data-id="${dialog.id}">编辑</button>
-            <button class="btn btn-ghost danger" data-action="remove" data-id="${dialog.id}">删除</button>
-          </div>
-        </div>
-      `).join('')}
+  for (const dialog of dialogList) {
+    const row = document.createElement('div')
+    row.className = 'settings-table-row'
+    row.innerHTML = `
+      <span class="settings-about">${dialog.name}</span>
+      <span class="settings-secondary">${dialog.source || 'manual'}</span>
+      <span class="settings-secondary">${new Date(dialog.updatedAt || Date.now()).toLocaleString()}</span>
+      <span class="settings-secondary">${Array.isArray(dialog.messages) ? dialog.messages.length : 0}</span>
+      <span class="settings-actions">
+        <button class="btn btn-ghost" data-action="open">打开</button>
+        <button class="btn btn-ghost" data-action="archive">归档</button>
+      </span>
     `
-
-    table.querySelectorAll('[data-action="remove"]').forEach(button => {
-      button.addEventListener('click', () => {
-        const id = button.dataset.id
-        const next = LiveFront.Services.settings.getAll()
-        next.dialogs = (next.dialogs || []).filter(item => item.id !== id)
-        LiveFront.Services.settings.set('dialogs', next.dialogs)
-        dialogs.length = 0
-        dialogs.push(...next.dialogs)
-        renderTable()
-      })
+    row.querySelector('[data-action="archive"]').addEventListener('click', () => {
+      dialog.status = 'archived'
+      LiveFront.Services.settings.set('dialogs', dialogList)
+      row.querySelector('.settings-about').textContent = `${dialog.name}`
     })
-
-    table.querySelectorAll('[data-action="edit"]').forEach(button => {
-      button.addEventListener('click', () => {
-        const id = button.dataset.id
-        const target = dialogs.find(item => item.id === id)
-        if (!target) return
-        openDialogForm(target, updated => {
-          const next = LiveFront.Services.settings.getAll()
-          next.dialogs = (next.dialogs || []).map(item => item.id === updated.id ? { ...item, ...updated } : item)
-          LiveFront.Services.settings.set('dialogs', next.dialogs)
-          dialogs.length = 0
-          dialogs.push(...next.dialogs)
-          renderTable()
-        })
-      })
+    row.querySelector('[data-action="open"]').addEventListener('click', () => {
+      LiveFront.EventBus.emit('dialog:open', { id: dialog.id })
     })
+    tableEl.appendChild(row)
   }
 
-  container.querySelector('#dialogAddBtn').addEventListener('click', () => {
-    openDialogForm(null, created => {
-      const next = LiveFront.Services.settings.getAll()
-      next.dialogs = [...(next.dialogs || []), created]
-      LiveFront.Services.settings.set('dialogs', next.dialogs)
-      dialogs.length = 0
-      dialogs.push(...next.dialogs)
-      renderTable()
+  emptyEl.style.display = dialogList.length ? 'none' : 'block'
+  container.querySelector('#dmAdd').addEventListener('click', () => {
+    dialogList.push({
+      id: Date.now().toString(36),
+      name: `对话 ${dialogList.length + 1}`,
+      source: 'manual',
+      status: 'active',
+      updatedAt: Date.now(),
+      messages: []
     })
-  })
-
-  renderTable()
-}
-
-function openDialogForm(dialog, onSubmit) {
-  const overlay = document.createElement('div')
-  overlay.className = 'settings-overlay'
-  const current = dialog || {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-    name: '',
-    type: 'other',
-    identifier: '',
-    projectPath: '',
-    status: 'active'
-  }
-
-  overlay.innerHTML = `
-    <div class="settings-modal settings-form-modal">
-      <div class="settings-header">
-        <div class="settings-title">${dialog ? '编辑 AI 对话' : '添加 AI 对话'}</div>
-        <button class="settings-close" id="dialogFormClose">✕</button>
-      </div>
-      <div class="settings-body settings-form-body">
-        <div class="settings-form-grid">
-          <label class="settings-form-label">名称</label>
-          <input class="settings-input" id="dialogFormName" value="${current.name || ''}" placeholder="例如：首页重构对话" />
-
-          <label class="settings-form-label">类型</label>
-          <select class="settings-input" id="dialogFormType">
-            ${['codex', 'chatgpt', 'claude-web', 'doubao-web', 'mcp', 'other'].map(type => `<option value="${type}" ${current.type === type ? 'selected' : ''}>${type}</option>`).join('')}
-          </select>
-
-          <label class="settings-form-label">标识</label>
-          <input class="settings-input" id="dialogFormIdentifier" value="${current.identifier || ''}" placeholder="对话ID / URL / CLI命令" />
-
-          <label class="settings-form-label">关联项目路径</label>
-          <input class="settings-input" id="dialogFormProjectPath" value="${current.projectPath || ''}" placeholder="可选" />
-
-          <label class="settings-form-label">状态</label>
-          <select class="settings-input" id="dialogFormStatus">
-            ${['active', 'synced', 'archived'].map(status => `<option value="${status}" ${current.status === status ? 'selected' : ''}>${status}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="settings-footer">
-        <span class="settings-hint">建议填写准确的标识，便于后续自动回传</span>
-        <div class="settings-footer-actions">
-          <button class="btn btn-ghost" id="dialogFormCancel">取消</button>
-          <button class="btn btn-primary" id="dialogFormSubmit">保存</button>
-        </div>
-      </div>
-    </div>
-  `
-
-  document.body.appendChild(overlay)
-  overlay.querySelector('#dialogFormClose').addEventListener('click', () => overlay.remove())
-  overlay.querySelector('#dialogFormCancel').addEventListener('click', () => overlay.remove())
-  overlay.addEventListener('click', event => { if (event.target === overlay) overlay.remove() })
-
-  overlay.querySelector('#dialogFormSubmit').addEventListener('click', () => {
-    const payload = {
-      id: current.id,
-      name: overlay.querySelector('#dialogFormName').value.trim(),
-      type: overlay.querySelector('#dialogFormType').value,
-      identifier: overlay.querySelector('#dialogFormIdentifier').value.trim(),
-      projectPath: overlay.querySelector('#dialogFormProjectPath').value.trim(),
-      status: overlay.querySelector('#dialogFormStatus').value
-    }
-    onSubmit(payload)
-    overlay.remove()
+    LiveFront.Services.settings.set('dialogs', dialogList)
+    openSettings('dialogs')
   })
 }
 
 function renderAgentIntegration(container) {
+  const agentCfg = LiveFront.Services.settings.getAll()
   container.innerHTML = `
     <div class="settings-section">
-      <div class="settings-section-title">已安装的 Agent</div>
-      <div class="settings-row" style="gap:8px; align-items:center;">
-        <button class="btn btn-primary" id="agentScanBtn">一键扫描</button>
-        <span class="settings-secondary" id="agentScanStatus"></span>
+      <div class="settings-section-title">Agent 集成</div>
+      <div class="settings-hint">控制 MCP Server、客户端连接以及 Claude / Cursor 配置导入。</div>
+      <div class="settings-row">
+        <div class="settings-label">自动启动 Server</div>
+        <div class="settings-control" id="mcpAutoStart"></div>
       </div>
-      <div class="settings-table" id="agentScanTable"></div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">MCP Server 管理</div>
-      <div class="settings-table" id="mcpServerTable"></div>
-      <div class="settings-row" style="flex-wrap:wrap; gap:8px; margin-top:8px;">
-        <button class="btn btn-primary" id="mcpAddServerBtn">连接新 Server</button>
-        <button class="btn btn-ghost" id="mcpImportClaude">从 Claude 导入</button>
-        <button class="btn btn-ghost" id="mcpImportCursor">从 Cursor 导入</button>
+      <div class="settings-row">
+        <div class="settings-label">Server 端口</div>
+        <div class="settings-control">
+          <input class="settings-input" id="mcpServerPort" value="${agentCfg.mcp?.serverPort || 9528}" />
+        </div>
       </div>
-      <div class="settings-form-grid" style="margin-top:10px;">
-        <label class="settings-form-label">类型</label>
-        <select class="settings-input" id="mcpTransport"><option value="stdio">stdio</option><option value="http">http</option></select>
-        <label class="settings-form-label">名称</label>
-        <input class="settings-input" id="mcpName" placeholder="例如：filesystem" />
-        <label class="settings-form-label">命令 / URL</label>
-        <input class="settings-input" id="mcpEndpoint" placeholder="stdio 填写命令，http 填写 URL" />
-        <label class="settings-form-label">参数</label>
-        <input class="settings-input" id="mcpArgs" placeholder="空格分隔的参数，仅 stdio" />
+      <div class="settings-row">
+        <div class="settings-label">刷新间隔(ms)</div>
+        <div class="settings-control">
+          <input class="settings-input" id="mcpRefreshMs" value="${agentCfg.mcp?.refreshIntervalMs || 5000}" />
+        </div>
       </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">LiveFront MCP 配置</div>
-      <div class="settings-hint">LiveFront 作为 MCP Server 运行后，其他 AI Agent 可以通过以下配置连接。</div>
-      <div class="settings-row" style="gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-ghost" id="mcpCopyClaude">Claude Desktop</button>
-        <button class="btn btn-ghost" id="mcpCopyCursor">Cursor</button>
-        <button class="btn btn-ghost" id="mcpCopyGeneric">通用 JSON</button>
-        <button class="btn btn-ghost" id="mcpExportClaude">导出 Claude</button>
-        <button class="btn btn-ghost" id="mcpExportCursor">导出 Cursor</button>
-        <button class="btn btn-ghost" id="mcpExportGeneric">导出通用</button>
+      <div class="settings-row">
+        <div class="settings-label">导入配置</div>
+        <div class="settings-control">
+          <button class="btn btn-ghost" id="mcpImportClaude">Claude Desktop</button>
+          <button class="btn btn-ghost" id="mcpImportCursor">Cursor</button>
+        </div>
       </div>
-      <div class="settings-hint">导入前会先解析配置，确认后批量添加选中的 Server。</div>
-      <div id="mcpImportPreview"></div>
-      <pre class="settings-code" id="mcpConfigPreview">加载中...</pre>
-      <div class="settings-row" style="gap:8px;">
-        <button class="btn btn-primary" id="mcpStartBtn">启动 MCP Server</button>
-        <button class="btn btn-ghost" id="mcpStopBtn">停止 MCP Server</button>
+      <div class="settings-row">
+        <div class="settings-label">已连接 Server</div>
+        <div class="settings-control">
+          <div id="mcpServerList" class="settings-secondary">加载中...</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">配置预览</div>
+        <div class="settings-control">
+          <pre class="settings-input" id="mcpConfigPreview" style="min-height:120px;white-space:pre-wrap;"></pre>
+        </div>
       </div>
     </div>
   `
 
-  const scanBtn = container.querySelector('#agentScanBtn')
-  const scanStatus = container.querySelector('#agentScanStatus')
-  const scanTable = container.querySelector('#agentScanTable')
-  const serverTable = container.querySelector('#mcpServerTable')
-  const configPreview = container.querySelector('#mcpConfigPreview')
-  const transportInput = container.querySelector('#mcpTransport')
-  const nameInput = container.querySelector('#mcpName')
-  const endpointInput = container.querySelector('#mcpEndpoint')
-  const argsInput = container.querySelector('#mcpArgs')
+  const autoStartEl = container.querySelector('#mcpAutoStart')
+  const transportInput = document.createElement('input')
+  const nameInput = document.createElement('input')
+  const endpointInput = document.createElement('input')
+  const argsInput = document.createElement('input')
+  transportInput.placeholder = 'stdio / http'
+  nameInput.placeholder = 'server 名称'
+  endpointInput.placeholder = '命令或 URL'
+  argsInput.placeholder = 'args(空格分隔)'
+  transportInput.value = 'stdio'
+  transportInput.className = nameInput.className = endpointInput.className = argsInput.className = 'settings-input'
 
-  let agentRefreshTimer = null;
-
-  function stopAgentRefresh() {
-    if (agentRefreshTimer) {
-      clearInterval(agentRefreshTimer);
-      agentRefreshTimer = null;
-    }
-  }
-
-  async function refreshScanResults() {
-    try {
-      scanStatus.textContent = '扫描中...'
-      const result = await LiveFront.Services.agent.scan()
-      scanStatus.textContent = result?.scanTime ? `上次扫描 ${new Date(result.scanTime).toLocaleTimeString()}` : '扫描完成'
-      renderScanTable(Array.isArray(result?.detectedAgents) ? result.detectedAgents : [])
-    } catch (error) {
-      scanStatus.textContent = `扫描失败: ${error.message}`
-      scanTable.innerHTML = '<div class="settings-empty">扫描失败</div>'
-    }
-  }
-
-  function startAgentRefresh(intervalMs) {
-    stopAgentRefresh();
-    if (!intervalMs || intervalMs < 1000) return;
-    agentRefreshTimer = setInterval(() => {
-      refreshScanResults();
-      refreshMcpServers();
-    }, intervalMs);
-  }
-
-  function renderScanTable(agents) {
-    if (!agents.length) {
-      scanTable.innerHTML = '<div class="settings-empty">未检测到 Agent</div>'
-      return
-    }
-    scanTable.innerHTML = `
-      <div class="settings-table-header agent-grid">
-        <div>状态</div><div>名称</div><div>类型</div><div>版本</div><div>路径 / 配置</div><div>操作</div>
-      </div>
-      ${agents.map(agent => `
-        <div class="settings-table-row agent-grid" data-status="${agent.status}">
-          <div>${statusIcon(agent.status)}</div>
-          <div>${agent.name}</div>
-          <div><span class="settings-tag">${agent.type}</span></div>
-          <div class="settings-secondary">${agent.version || '-'}</div>
-          <div class="settings-secondary">${agent.configPath || agent.path || '-'}</div>
-          <div>
-            <button class="btn btn-ghost" data-action="configure-agent" data-name="${agent.name}">配置连接</button>
-          </div>
-        </div>
-      `).join('')}
-    `
-    scanTable.querySelectorAll('[data-action="configure-agent"]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const res = await LiveFront.Services.agent.getConfig(btn.dataset.name)
-        if (res?.success && res.mcpServers?.length) {
-          for (const server of res.mcpServers) {
-            try {
-              await LiveFront.Services.mcp.connectServer({ name: server.name, transport: server.url ? 'http' : 'stdio', command: server.command, args: server.args, url: server.url, source: btn.dataset.name, sourcePath: res.configPath })
-            } catch {}
-          }
-          await refreshMcpServers()
-        } else {
-          alert('该 Agent 没有可导入的 MCP Server 配置，或配置文件未找到。')
-        }
-      })
+  for (const opt of [{ value: true, label: '开启' }, { value: false, label: '关闭' }]) {
+    const radio = document.createElement('span')
+    radio.className = `settings-radio ${Boolean(agentCfg.mcp?.autoStartServer) === opt.value ? 'active' : ''}`
+    radio.textContent = opt.label
+    radio.addEventListener('click', () => {
+      const next = LiveFront.Services.settings.getAll()
+      next.mcp.autoStartServer = opt.value
+      autoStartEl.querySelectorAll('.settings-radio').forEach(el => el.classList.remove('active'))
+      radio.classList.add('active')
+      LiveFront.Services.settings.set('mcp', next.mcp)
     })
+    autoStartEl.appendChild(radio)
   }
 
   async function refreshMcpServers() {
+    const listEl = container.querySelector('#mcpServerList')
     try {
       const servers = await LiveFront.Services.mcp.listConnectedServers()
-      renderMcpServers(Array.isArray(servers) ? servers : [])
-    } catch (error) {
-      serverTable.innerHTML = `<div class="settings-empty">刷新失败：${error.message}</div>`;
-    }
-  }
-
-  function renderMcpServers(servers) {
-    if (!servers.length) {
-      serverTable.innerHTML = '<div class="settings-empty">暂无已连接的 MCP Server</div>'
-      return
-    }
-    serverTable.innerHTML = `
-      <div class="settings-table-header mcp-grid">
-        <div>名称</div><div>状态</div><div>工具数</div><div>错误信息</div><div>来源</div><div>操作</div>
-      </div>
-      ${servers.map(server => `
-        <div class="settings-table-row mcp-grid" data-status="${server.status}">
-          <div>${server.name}</div>
-          <div><span class="settings-status ${server.status === 'connected' ? 'active' : (server.status === 'error' ? 'error' : '')}">${server.status}</span></div>
-          <div>${server.toolsCount ?? server.tools?.length ?? 0} 个</div>
-          <div class="settings-secondary" title="${server.lastError || ''}">${server.lastError ? server.lastError.slice(0, 80) : '-'}</div>
-          <div class="settings-secondary">${server.source || '-'}</div>
-          <div class="settings-actions">
-            <button class="btn btn-ghost" data-action="refresh-tools" data-name="${server.name}">刷新工具</button>
-            <button class="btn btn-ghost danger" data-action="disconnect" data-name="${server.name}">断开</button>
-          </div>
-        </div>
-      `).join('')}
-    `
-    serverTable.querySelectorAll('[data-action="disconnect"]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        await LiveFront.Services.mcp.disconnectServer(btn.dataset.name)
-        await refreshMcpServers()
-      })
-    })
-    serverTable.querySelectorAll('[data-action="refresh-tools"]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        await LiveFront.Services.mcp.listRemoteTools(btn.dataset.name)
-        await refreshMcpServers()
-      })
-    })
-  }
-
-  let lastConfigPayload = null;
-  async function refreshConfigPreview() {
-    const config = await LiveFront.Services.mcp.getConfig();
-    lastConfigPayload = config || null;
-    if (!config) {
-      configPreview.textContent = '未获取到配置';
-      return;
-    }
-    configPreview.textContent = JSON.stringify(config, null, 2);
-  }
-
-  function buildExportPayload(format) {
-    if (!lastConfigPayload) return '{}';
-    if (format === 'claude') return JSON.stringify(lastConfigPayload.claudeDesktop || {}, null, 2);
-    if (format === 'cursor') return JSON.stringify(lastConfigPayload.cursor || {}, null, 2);
-    if (format === 'generic') return JSON.stringify(lastConfigPayload.generic || {}, null, 2);
-    return JSON.stringify(lastConfigPayload, null, 2);
-  }
-
-  async function exportConfigToFile(format) {
-    try {
-      const payload = buildExportPayload(format);
-      const filePath = await LiveFront.Services.dialog.saveFile([{ name: 'JSON', extensions: ['json'] }]);
-      if (!filePath) return;
-      await LiveFront.Services.fileSystem.writeFile(filePath, payload);
-      alert('已导出配置');
-    } catch (error) {
-      alert('导出失败: ' + error.message);
-    }
-  }
-
-  async function copyConfig(format) {
-    try {
-      await navigator.clipboard.writeText(buildExportPayload(format));
-      alert('已复制到剪贴板');
-    } catch (error) {
-      alert('复制失败: ' + error.message);
-    }
-  }
-
-  function statusIcon(status) {
-    if (status === 'installed' || status === 'configured' || status === 'running') return '[OK]'
-    return '[!]'
-  }
-
-  scanBtn.addEventListener('click', refreshScanResults)
-  container.querySelector('#mcpStartBtn').addEventListener('click', async () => {
-    const settings = LiveFront.Services.settings.getAll()
-    await LiveFront.Services.mcp.startServer(settings.mcp?.serverPort || 9528)
-    await refreshConfigPreview()
-  })
-  container.querySelector('#mcpStopBtn').addEventListener('click', async () => {
-    await LiveFront.Services.mcp.stopServer()
-    await refreshConfigPreview()
-  })
-  container.querySelector('#mcpCopyClaude').addEventListener('click', () => copyConfig('claude'))
-  container.querySelector('#mcpCopyCursor').addEventListener('click', () => copyConfig('cursor'))
-  container.querySelector('#mcpCopyGeneric').addEventListener('click', () => copyConfig('generic'))
-  container.querySelector('#mcpExportClaude').addEventListener('click', () => exportConfigToFile('claude'))
-  container.querySelector('#mcpExportCursor').addEventListener('click', () => exportConfigToFile('cursor'))
-  container.querySelector('#mcpExportGeneric').addEventListener('click', () => exportConfigToFile('generic'))
-
-  async function openImportPreview(sourceName, filePath) {
-    try {
-      const config = await LiveFront.Services.fileSystem.readFile(filePath)
-      const parsed = JSON.parse(config)
-      const servers = parsed?.mcpServers || parsed?.mcp_servers || {}
-      const entries = Object.entries(servers)
-      const preview = container.querySelector('#mcpImportPreview')
-      if (!entries.length) {
-        preview.innerHTML = '<div class="settings-empty">未在配置中发现可用 Server</div>'
+      if (!servers || servers.length === 0) {
+        listEl.textContent = '暂无已连接服务器'
         return
       }
-      preview.innerHTML = `
-        <div class="settings-table">
-          <div class="settings-table-header mcp-grid">
-            <div>名称</div><div>传输</div><div>命令 / URL</div><div>导入</div>
+      listEl.innerHTML = ''
+      for (const s of servers) {
+        const row = document.createElement('div')
+        row.className = 'settings-table-row'
+        row.innerHTML = `
+          <span class="settings-about">${s.name}</span>
+          <span class="settings-status ${s.status}">${s.status}</span>
+          <span class="settings-secondary">${s.transport || ''}</span>
+          <span></span>
+          <span class="settings-actions">
+            <button class="btn btn-ghost">断开</button>
+          </span>
+        `
+        row.querySelector('button').addEventListener('click', async () => {
+          try {
+            await LiveFront.Services.mcp.disconnectServer(s.name)
+            await refreshMcpServers()
+          } catch (err) {
+            alert('断开失败: ' + err.message)
+          }
+        })
+        listEl.appendChild(row)
+      }
+    } catch (err) {
+      listEl.textContent = '读取已连接服务器失败: ' + err.message
+    }
+  }
+
+  function refreshConfigPreview() {
+    const previewEl = container.querySelector('#mcpConfigPreview')
+    if (!previewEl) return
+    const next = LiveFront.Services.settings.getAll()
+    previewEl.textContent = JSON.stringify(next.mcp || {}, null, 2)
+  }
+
+  container.querySelector('#mcpServerPort').addEventListener('change', e => {
+    const next = LiveFront.Services.settings.getAll()
+    next.mcp.serverPort = Number(e.target.value) || 9528
+    LiveFront.Services.settings.set('mcp', next.mcp)
+    refreshConfigPreview()
+  })
+  container.querySelector('#mcpRefreshMs').addEventListener('change', e => {
+    const next = LiveFront.Services.settings.getAll()
+    next.mcp.refreshIntervalMs = Number(e.target.value) || 5000
+    LiveFront.Services.settings.set('mcp', next.mcp)
+    refreshConfigPreview()
+  })
+
+  let agentTimer = null
+  function startAgentRefresh(intervalMs) {
+    if (agentTimer) clearInterval(agentTimer)
+    agentTimer = setInterval(refreshConfigPreview, intervalMs || 5000)
+  }
+
+  async function openImportPreview(sourceName, filePath) {
+    const preview = document.createElement('div')
+    preview.className = 'settings-section'
+    preview.innerHTML = `<div class="settings-section-title">选择导入 ${sourceName} Server</div>`
+    container.appendChild(preview)
+
+    try {
+      const parsed = JSON.parse(require('fs').readFileSync(filePath, 'utf-8'))
+      const entries = Object.entries(parsed.mcpServers || parsed.mcp?.servers || {})
+      if (!entries.length) { alert('未检测到可导入 Server'); return }
+      const selected = []
+      for (const [name, value] of entries) {
+        const row = document.createElement('div')
+        row.className = 'settings-row'
+        row.innerHTML = `
+          <div class="settings-label">${name}</div>
+          <div class="settings-control">
+            <label><input type="checkbox" data-name="${name}" /> 启用</label>
+            <span class="settings-secondary">${value.url || value.command || ''}</span>
           </div>
-          ${entries.map(([name, value]) => `
-            <div class="settings-table-row mcp-grid">
-              <div>${name}</div>
-              <div><span class="settings-tag">${value.url ? 'http' : 'stdio'}</span></div>
-              <div class="settings-secondary">${value.url || value.command || '-'}</div>
-              <div><label class="settings-radio"><input type="checkbox" data-import-name="${name}" checked /><span>选择</span></label></div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="settings-row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
-          <button class="btn btn-ghost" id="mcpImportCancelPreview">取消</button>
-          <button class="btn btn-primary" id="mcpImportConfirmPreview">导入选中 Server</button>
-        </div>
-      `
-      preview.querySelector('#mcpImportCancelPreview').addEventListener('click', () => {
-        preview.innerHTML = ''
-      })
-      preview.querySelector('#mcpImportConfirmPreview').addEventListener('click', async () => {
-        const selected = [...preview.querySelectorAll('[data-import-name]:checked')].map(el => el.dataset.importName)
+        `
+        const checkbox = row.querySelector('input')
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) selected.push(name)
+          else {
+            const i = selected.indexOf(name)
+            if (i >= 0) selected.splice(i, 1)
+          }
+        })
+        preview.appendChild(row)
+      }
+
+      const applyBtn = document.createElement('button')
+      applyBtn.className = 'btn btn-primary'
+      applyBtn.textContent = '导入选中'
+      applyBtn.addEventListener('click', async () => {
         if (!selected.length) { alert('请至少选择一个 Server'); return }
         let imported = 0
         for (const [name, value] of entries) {
@@ -718,6 +498,7 @@ function renderAgentIntegration(container) {
         preview.innerHTML = ''
         await refreshMcpServers()
       })
+      preview.appendChild(applyBtn)
     } catch (error) {
       alert('解析配置失败: ' + error.message);
     }
@@ -734,7 +515,7 @@ function renderAgentIntegration(container) {
     await openImportPreview('Cursor', filePath)
   })
 
-  container.querySelector('#mcpAddServerBtn').addEventListener('click', async () => {
+  container.querySelector('#mcpAddServerBtn')?.addEventListener('click', async () => {
     const transport = transportInput.value
     const name = nameInput.value.trim()
     const endpoint = endpointInput.value.trim()
@@ -761,12 +542,11 @@ function renderAgentIntegration(container) {
 
   refreshMcpServers()
   refreshConfigPreview()
-  const settings = LiveFront.Services.settings.getAll()
-  startAgentRefresh(settings.mcp?.refreshIntervalMs || 5000)
+  startAgentRefresh(agentCfg.mcp?.refreshIntervalMs || 5000)
 }
 
 function renderDialogs(container) {
-  const settings = LiveFront.Services.settings.getAll()
+  const dialogsCfg = LiveFront.Services.settings.getAll()
   container.innerHTML = `
     <div class="settings-section">
       <div class="settings-section-title">对话管理</div>
@@ -774,7 +554,7 @@ function renderDialogs(container) {
       <div class="settings-row">
         <div class="settings-label">已配置对话数</div>
         <div class="settings-control">
-          <span>${(settings.dialogs || []).length}</span>
+          <span>${(dialogsCfg.dialogs || []).length}</span>
         </div>
       </div>
       <div class="settings-row">
@@ -793,7 +573,7 @@ function renderEditorSettings(container) {
   container.innerHTML = `
     <div class="settings-section">
       <div class="settings-section-title">编辑器设置</div>
-      <div class="settings-hint">编辑器设置占位，后续可扩展字号、主题、自动保存等选项。</div>
+      <div class="settings-hint">编辑器占位，后续可扩展字号、主题、自动保存等选项。</div>
     </div>
   `
 }
@@ -802,7 +582,7 @@ function renderPreviewSettings(container) {
   container.innerHTML = `
     <div class="settings-section">
       <div class="settings-section-title">预览设置</div>
-      <div class="settings-hint">预览设置占位，后续可扩展默认视口、刷新策略等。</div>
+      <div class="settings-hint">预览占位，后续可扩展默认视口、刷新策略等。</div>
     </div>
   `
 }
@@ -811,7 +591,7 @@ function renderTerminalSettings(container) {
   container.innerHTML = `
     <div class="settings-section">
       <div class="settings-section-title">终端设置</div>
-      <div class="settings-hint">终端设置占位，后续可扩展默认 Shell 和字号。</div>
+      <div class="settings-hint">终端占位，后续可扩展默认 Shell 和字号。</div>
     </div>
   `
 }
