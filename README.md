@@ -125,6 +125,46 @@ AI 生成代码 → 直接看到效果 → 点一下按钮 → 改个颜色 → 
 
 ---
 
+## 效果展示
+
+### 最终版概念图
+
+<p align="center">
+  <img src="docs/images/livefront-concept.png" width="700" alt="LiveFront 最终版概念图">
+</p>
+
+### 开发截图
+
+<p align="center">
+  <img src="docs/images/livefront-preview.png" width="700" alt="LiveFront 实时预览">
+</p>
+
+<p align="center">
+  <img src="docs/images/livefront-properties.png" width="700" alt="LiveFront 属性面板">
+</p>
+
+<p align="center">
+  <img src="docs/images/livefront-dev-tools.png" width="700" alt="LiveFront 开发工具">
+</p>
+
+<p align="center">
+  <img src="docs/images/livefront-inspector.png" width="700" alt="LiveFront 元素检查器">
+</p>
+
+<p align="center">
+  <img src="docs/images/livefront-screenshot.png" width="700" alt="LiveFront 截图">
+</p>
+
+<p align="center">
+  <img src="docs/images/livefront-screenshot-phase3.png" width="700" alt="LiveFront Phase 3 截图">
+</p>
+
+<p align="center">
+  <img src="docs/images/livefront-screenshot-debug.png" width="700" alt="LiveFront 调试截图">
+</p>
+
+---
+
 ## 这个项目的前景
 
 ### 为什么这个方向值得做
