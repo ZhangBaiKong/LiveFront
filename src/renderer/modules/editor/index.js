@@ -38,7 +38,8 @@
       { key: 'Ctrl+W', command: 'editor.closeTab' },
       { key: 'Ctrl+=', command: 'editor.zoomIn' },
       { key: 'Ctrl+-', command: 'editor.zoomOut' },
-      { key: 'Ctrl+0', command: 'editor.resetZoom' }
+      { key: 'Ctrl+0', command: 'editor.resetZoom' },
+      { key: 'Ctrl+Shift+W', command: 'editor.closeFileAndPreview' }
     ],
 
     menus: [
@@ -117,6 +118,7 @@
       ctx.commands.register('editor.saveAs', () => this._editor.saveAs())
       ctx.commands.register('editor.newFile', () => this._newFile())
       ctx.commands.register('editor.closeTab', () => this._closeCurrentTab())
+      ctx.commands.register('editor.closeFileAndPreview', () => this._closeFileAndPreview())
       ctx.commands.register('editor.toggleMinimap', () => this._editor.toggleMinimap())
       ctx.commands.register('editor.toggleWordWrap', () => this._editor.toggleWordWrap())
       ctx.commands.register('editor.zoomIn', () => this._editor.setFontSize(this._editor._fontSize + 1))
@@ -349,6 +351,44 @@
         const cursorEl = document.getElementById('editor-cursor')
         if (cursorEl) cursorEl.textContent = ''
       }
+    },
+
+    // ??? ??????? ???
+    async _closeFileAndPreview() {
+      const activePath = this._editor.getActivePath()
+      if (activePath) {
+        if (this._editor.isDirty(activePath)) {
+          const entry = this._editor.getEntry(activePath)
+          const name = entry ? entry.name : activePath.split(/[\/\\]/).pop()
+          const result = await this._confirmSave(name)
+          if (result === 'cancel') return
+          if (result === 'save') {
+            await this._editor.saveFile(activePath)
+          }
+        }
+        const nextPath = this._tabBar.removeTab(activePath)
+        this._editor.closeFile(activePath)
+        if (nextPath) {
+          this._editor.openFile(nextPath, null)
+          this._tabBar.activateTab(nextPath)
+        } else {
+          const emptyState = document.getElementById('editorEmpty')
+          const monacoEl = document.getElementById('monacoContainer')
+          if (emptyState) emptyState.style.display = ''
+          if (monacoEl) monacoEl.style.display = 'none'
+          this.state.activeFile = null
+          const langEl = document.getElementById('editor-lang')
+          if (langEl) langEl.textContent = ''
+          const cursorEl = document.getElementById('editor-cursor')
+          if (cursorEl) cursorEl.textContent = ''
+        }
+      }
+      if (LiveFront.Preview) {
+        await LiveFront.Preview.clearPreview()
+      }
+      LiveFront.state.selectedElement = null
+      LiveFront.state.hoverElement = null
+      LiveFront.EventBus.emit('element:deselected')
     },
 
     // ── 保存确认对话框（简单实现） ──

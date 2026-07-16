@@ -1,4 +1,4 @@
-ï»¿/* LiveFront Editor â€” Monaco optional loader */
+/* LiveFront Editor ¡ª Monaco optional loader */
 window.LiveFront = window.LiveFront || {}
 
 const LANG_MAP = {
@@ -186,6 +186,17 @@ class EditorManager {
     this._editor?.dispose?.()
     this._editor = null
     this._ready = false
+  }
+  closeFile(filePath) {
+    const entry = this._models.get(filePath);
+    if (!entry) return null;
+    entry.model.dispose?.();
+    this._models.delete(filePath);
+    if (this._activePath === filePath) {
+      this._activePath = null;
+    }
+    const remaining = Array.from(this._models.keys());
+    return remaining.length ? remaining[Math.min(remaining.indexOf(filePath), remaining.length - 1)] : null;
   }
   _switchToFile(path) {
     if (!this._editor) return
