@@ -1,36 +1,399 @@
-/* LiveFront 布局骨架 */
-.titlebar { height: var(--titlebar-height); display: flex; align-items: center; -webkit-app-region: drag; flex-shrink: 0; }
-.menubar { height: var(--menubar-height); display: flex; align-items: center; flex-shrink: 0; }
-.main-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
-.sidebar { width: var(--sidebar-width); min-width: 160px; max-width: 500px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
-.main-center { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
-.panel { width: var(--panel-width); min-width: 200px; max-width: 600px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
-.statusbar { height: var(--statusbar-height); display: flex; align-items: center; flex-shrink: 0; }
-.gutter { flex-shrink: 0; background: transparent; transition: background var(--duration-fast) var(--ease); }
-.gutter:hover { background: var(--accent); }
-.gutter-vertical { width: var(--gutter-size); cursor: col-resize; }
-.gutter-horizontal { height: var(--gutter-size); cursor: row-resize; }
+﻿/**
+ * LiveFront v2.0 — 主布局框架
+ *
+ * 布局结构：
+ *   ┌──────────────────────────────────────────┐
+ *   │                顶部栏（40px）             │
+ *   ├────────┬─────────────────────┬───────────┤
+ *   │        │                     │           │
+ *   │ 文件树  │     预览区          │ 属性面板   │
+ *   │(220px) │    (flex: 1)        │ (300px)   │
+ *   │        │                     │           │
+ *   ├────────┴─────────────────────┴───────────┤
+ *   │              拓扑图区域（200px）          │
+ *   ├──────────────────────────────────────────┤
+ *   │              状态栏（24px）              │
+ *   └──────────────────────────────────────────┘
+ */
 
-/* workspace: 三行 grid — 编辑器+预览区 | 修改线 | 效果线
-   预览区折叠 (0fr), 由 JS 在打开项目后展开为 1fr */
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+
+/* ══════════════════════════════════════════
+   顶部栏
+   ══════════════════════════════════════════ */
+.topbar {
+  height: 40px;
+  padding: 0 var(--space-md);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.topbar-logo {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-text-primary);
+}
+
+.topbar-logo-icon {
+  color: var(--color-accent);
+  font-size: var(--text-lg);
+}
+
+.topbar-menu {
+  display: flex;
+  gap: 2px;
+}
+
+.topbar-menu-item {
+  padding: var(--space-xs) 10px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.topbar-menu-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.topbar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.topbar-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+
+/* ══════════════════════════════════════════
+   主工作区
+   ══════════════════════════════════════════ */
 .workspace {
   flex: 1;
-  display: grid;
-  grid-template-rows: 1fr auto auto;
-  grid-template-columns: 1fr var(--gutter-size) 0fr;
+  display: flex;
   overflow: hidden;
-  min-height: 0;
-}
-.workspace-main { min-height: 0; overflow: hidden; }
-
-/* 预览区: 默认折叠 (宽度 0), 不用 display:none */
-.gutter-preview { overflow: hidden; }
-.workspace-preview { min-width: 0; overflow: hidden; }
-
-/* workspace 展开状态: 预览区可见 */
-.workspace.preview-active {
-  grid-template-columns: 1fr var(--gutter-size) 1fr;
 }
 
-.welcome { flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; }
-.hidden { display: none !important; }
+
+/* ── 通用面板 ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-secondary);
+  flex-shrink: 0;
+}
+
+.panel-header {
+  height: 36px;
+  padding: 0 var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-title {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-semibold);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.panel-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.panel-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xs) 0;
+}
+
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-tab {
+  flex: 1;
+  padding: var(--space-sm) 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+}
+.panel-tab.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+.panel-tab:hover:not(.active) {
+  color: var(--color-text-primary);
+}
+
+
+/* ══════════════════════════════════════════
+   左侧：文件树
+   ══════════════════════════════════════════ */
+.file-tree {
+  width: 220px;
+  border-right: 1px solid var(--color-border);
+}
+
+
+/* ══════════════════════════════════════════
+   中间：预览区
+   ══════════════════════════════════════════ */
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preview-toolbar {
+  height: 36px;
+  padding: 0 var(--space-md);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.device-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.device-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.device-btn.active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+.device-btn:hover:not(.active) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.preview-url {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.preview-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.preview-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.preview-container {
+  flex: 1;
+  background: var(--color-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+
+/* ══════════════════════════════════════════
+   右侧：属性面板 / AI 对话
+   ══════════════════════════════════════════ */
+.right-panel {
+  width: 300px;
+  border-left: 1px solid var(--color-border);
+}
+
+
+/* ══════════════════════════════════════════
+   底部：拓扑图区域
+   ══════════════════════════════════════════ */
+.topology-panel {
+  height: 200px;
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: height var(--duration-normal) var(--ease-default);
+}
+
+.topology-panel.collapsed {
+  height: 36px;
+}
+
+.topology-header {
+  height: 36px;
+  padding: 0 var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.topology-title {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-semibold);
+}
+
+.topology-toggle {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  transition: color var(--duration-fast);
+}
+.topology-toggle:hover {
+  color: var(--color-text-primary);
+}
+
+.topology-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-sm);
+}
+
+.topology-panel.collapsed .topology-content {
+  display: none;
+}
+
+
+/* ══════════════════════════════════════════
+   状态栏
+   ══════════════════════════════════════════ */
+.statusbar {
+  height: 24px;
+  padding: 0 var(--space-md);
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+/* 项目打开后，状态指示灯变绿 */
+.status-dot.connected {
+  background: var(--color-success);
+}
+
+
+/* ══════════════════════════════════════════
+   空状态占位
+   ══════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-sm);
+  color: var(--color-text-tertiary);
+}
+
+.empty-state-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.empty-state-text {
+  font-size: var(--text-sm);
+}
+

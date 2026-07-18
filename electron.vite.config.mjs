@@ -1,57 +1,64 @@
-﻿import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const monacoEditorPlugin = require('vite-plugin-monaco-editor');
-const monaco = monacoEditorPlugin.default || monacoEditorPlugin;
-import { resolve } from 'path'
-import { defineConfig } from 'electron-vite'
+﻿/**
+ * LiveFront v2.0 — electron-vite 配置
+ *
+ * 配置 main、preload、renderer 三个入口：
+ *   - main:     Electron 主进程（Node.js 环境）
+ *   - preload:  预加载脚本（Node.js + 沙箱环境）
+ *   - renderer: 渲染进程（浏览器环境，纯 HTML/CSS/JS，无框架）
+ */
+
+import { resolve } from "path";
+import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 
 export default defineConfig({
+  /**
+   * 主进程配置
+   * 入口：src/main/index.js
+   * 输出：out/main/
+   */
   main: {
+    plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
         input: {
-          index: resolve(__dirname, 'src/main/index.js'),
-          'mcp-client': resolve(__dirname, 'src/main/mcp-client.js'),
-          'mcp-server': resolve(__dirname, 'src/main/mcp-server.js'),
-          'agent-scanner': resolve(__dirname, 'src/main/agent-scanner.js'),
-          'preview-server': resolve(__dirname, 'src/main/preview-server.js')
+          index: resolve(__dirname, "src/main/index.js"),
         },
-        external: [
-          'electron',
-          'chokidar',
-          'node-pty',
-          'simple-git',
-          'archiver'
-        ]
-      }
-    }
-  },
-  preload: {
-    build: {
-      rollupOptions: {
-        input: {
-          index: resolve(__dirname, 'src/preload/index.js')
-        },
-        external: ['electron', '@electron-toolkit/preload']
-      }
-    }
-  },
-  renderer: {
-    root: resolve(__dirname, 'src/renderer'),
-    plugins: [
-      monaco({ languageWorkers: ['editorWorkerService', 'css', 'html', 'json', 'typescript'], customDistPath: () => require('path').join(process.cwd(), 'out', 'renderer', 'monacoeditorwork') })
-    ],
-    build: {
-      rollupOptions: {
-        input: {
-          index: resolve(__dirname, 'src/renderer/index.html')
-        }
       },
-      cssCodeSplit: true
     },
-    css: {
-      postcss: null
-    }
-  }
-})
+  },
+
+  /**
+   * 预加载脚本配置
+   * 入口：src/preload/index.js
+   * 输出：out/preload/
+   */
+  preload: {
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        input: {
+          index: resolve(__dirname, "src/preload/index.js"),
+        },
+      },
+    },
+  },
+
+  /**
+   * 渲染进程配置
+   * 入口：src/renderer/index.html
+   * 输出：out/renderer/
+   *
+   * 纯 HTML/CSS/JS，无框架，无需 JSX 或 Vue 插件
+   */
+  renderer: {
+    root: resolve(__dirname, "src/renderer"),
+    build: {
+      rollupOptions: {
+        input: {
+          index: resolve(__dirname, "src/renderer/index.html"),
+        },
+      },
+    },
+  },
+});
 

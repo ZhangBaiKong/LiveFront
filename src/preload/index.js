@@ -1,167 +1,104 @@
-const { contextBridge, ipcRenderer } = require('electron')
-// electronAPI removed - not needed
+﻿/**
+ * LiveFront v2.0 — 预加载脚本
+ *
+ * 职责：
+ *   通过 contextBridge 安全地向渲染进程暴露 API
+ *   所有主进程能力必须通过 IPC 调用，渲染进程无法直接访问 Node.js
+ *
+ * 安全原则：
+ *   - contextIsolation: true（主进程中已配置）
+ *   - 仅暴露白名单中的 IPC 频道
+ *   - 不暴露任何 Node.js 原生模块
+ */
 
+import { contextBridge, ipcRenderer } from "electron";
 
-const api = {
-  terminal: {
-    create: (opts) => ipcRenderer.invoke('terminal:create', opts),
-    write: (data) => ipcRenderer.send('terminal:write', data),
-    resize: (opts) => ipcRenderer.send('terminal:resize', opts),
-    kill: (termId) => ipcRenderer.send('terminal:kill', termId),
-    onData: (callback) => {
-      const handler = (_e, data) => callback(data)
-      ipcRenderer.on('terminal:data', handler)
-      return () => ipcRenderer.removeListener('terminal:data', handler)
-    },
-    onExit: (callback) => {
-      const handler = (_e, data) => callback(data)
-      ipcRenderer.on('terminal:exit', handler)
-      return () => ipcRenderer.removeListener('terminal:exit', handler)
-    }
-  },
+/**
+ * IPC 频道白名单
+ * 只有在此列表中的频道才允许渲染进程调用
+ */
+const IPC_CHANNELS = {
+  invoke: [
+    "app:getVersion",
+    "app:getName",
+    "window:minimize",
+    "window:maximize",
+    "window:close",
+    // 后续模块追加：
+    // "fs:readDir", "fs:readFile", "fs:writeFile",
+    // "preview:start", "preview:stop", "preview:getUrl",
+    // "ai:send", "ai:cancel",
+    // "terminal:create", "terminal:write", "terminal:resize",
+  ],
+  send: [
+    // 单向发送频道（渲染 → 主进程）
+  ],
+  on: [
+    // 监听频道（主进程 → 渲染进程）
+  ],
+};
 
-  window: {
-    minimize: () => ipcRenderer.invoke('window:minimize'),
-    maximize: () => ipcRenderer.invoke('window:maximize'),
-    close: () => ipcRenderer.invoke('window:close'),
-    isMaximized: () => ipcRenderer.invoke('window:is-maximized')
-  },
-  fs: {
-    readDir: (path) => ipcRenderer.invoke('fs:read-dir', path),
-    readDirByExt: (path, extensions) => ipcRenderer.invoke('fs:read-dir-by-ext', path, extensions),
-    readFile: (path) => ipcRenderer.invoke('fs:read-file', path),
-    writeFile: (path, content) => ipcRenderer.invoke('fs:write-file', path, content),
-    createFile: (path, content) => ipcRenderer.invoke('fs:create-file', path, content),
-    createDir: (path) => ipcRenderer.invoke('fs:create-dir', path),
-    deleteFile: (path) => ipcRenderer.invoke('fs:delete-file', path),
-    rename: (oldPath, newPath) => ipcRenderer.invoke('fs:rename', oldPath, newPath),
-    stat: (path) => ipcRenderer.invoke('fs:stat', path),
-    exists: (path) => ipcRenderer.invoke('fs:exists', path),
-    watch: (dirPath) => ipcRenderer.invoke('fs:watch', dirPath),
-    unwatch: () => ipcRenderer.invoke('fs:unwatch'),
-    onFileChanged: (callback) => {
-      const handler = (_e, filePath) => callback(filePath)
-      ipcRenderer.on('fs:file-changed', handler)
-      return () => ipcRenderer.removeListener('fs:file-changed', handler)
-    },
-    onFileAdded: (callback) => {
-      const handler = (_e, filePath) => callback(filePath)
-      ipcRenderer.on('fs:file-added', handler)
-      return () => ipcRenderer.removeListener('fs:file-added', handler)
-    },
-    onFileRemoved: (callback) => {
-      const handler = (_e, filePath) => callback(filePath)
-      ipcRenderer.on('fs:file-removed', handler)
-      return () => ipcRenderer.removeListener('fs:file-removed', handler)
-    }
-  },
-  dialog: {
-    openFolder: () => ipcRenderer.invoke('dialog:open-folder'),
-    openFile: (filters) => ipcRenderer.invoke('dialog:open-file', filters),
-    saveFile: (filters) => ipcRenderer.invoke('dialog:save-file', filters),
-    confirm: (message) => ipcRenderer.invoke('dialog:confirm', message)
-  },
-  shell: {
-    openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
-    showItem: (path) => ipcRenderer.invoke('shell:show-item', path)
-  },
+/**
+ * 校验频道是否在白名单中
+ * @param {string} channel - IPC 频道名
+ * @param {string} type - 调用类型：invoke / send / on
+ * @returns {boolean}
+ */
+function isChannelAllowed(channel, type) {
+  return IPC_CHANNELS[type]?.includes(channel) ?? false;
+}
+
+/**
+ * 暴露给渲染进程的 API
+ * 通过 window.LiveFront 访问
+ */
+contextBridge.exposeInMainWorld("LiveFront", {
+  /**
+   * 应用相关 API
+   */
   app: {
-    getVersion: () => ipcRenderer.invoke('app:get-version'),
-    getPath: (name) => ipcRenderer.invoke('app:get-path', name)
+    /** 获取应用版本号 */
+    getVersion: () => ipcRenderer.invoke("app:getVersion"),
+    /** 获取应用名称 */
+    getName: () => ipcRenderer.invoke("app:getName"),
   },
-  ai: {
-    request: (params) => ipcRenderer.invoke('ai:request', params),
-    streamRequest: (params) => ipcRenderer.invoke('ai:stream-request', params),
-    cancelStream: (termId) => ipcRenderer.send('ai:stream-cancel', { termId }),
-    sendToCli: (params) => ipcRenderer.invoke('ai:send-to-cli', params),
-    onStreamChunk: (callback) => {
-      const handler = (_e, data) => callback(data)
-      ipcRenderer.on('ai:stream-chunk', handler)
-      return () => ipcRenderer.removeListener('ai:stream-chunk', handler)
+
+  /**
+   * 窗口操作 API
+   */
+  window: {
+    minimize: () => ipcRenderer.invoke("window:minimize"),
+    maximize: () => ipcRenderer.invoke("window:maximize"),
+    close: () => ipcRenderer.invoke("window:close"),
+  },
+
+  /**
+   * 通用 IPC 调用（带白名单校验）
+   * @param {string} channel - 频道名
+   * @param  {...any} args - 参数
+   * @returns {Promise<any>}
+   */
+  ipc: {
+    invoke: (channel, ...args) => {
+      if (isChannelAllowed(channel, "invoke")) {
+        return ipcRenderer.invoke(channel, ...args);
+      }
+      return Promise.reject(new Error(`IPC 频道 "${channel}" 不在白名单中`));
     },
-    onStreamEnd: (callback) => {
-      const handler = (_e, data) => callback(data)
-      ipcRenderer.on('ai:stream-end', handler)
-      return () => ipcRenderer.removeListener('ai:stream-end', handler)
+    send: (channel, ...args) => {
+      if (isChannelAllowed(channel, "send")) {
+        ipcRenderer.send(channel, ...args);
+      } else {
+        console.warn(`[LiveFront] 尝试调用未授权频道: ${channel}`);
+      }
     },
-    onStreamError: (callback) => {
-      const handler = (_e, data) => callback(data)
-      ipcRenderer.on('ai:stream-error', handler)
-      return () => ipcRenderer.removeListener('ai:stream-error', handler)
-    }
+    on: (channel, callback) => {
+      if (isChannelAllowed(channel, "on")) {
+        ipcRenderer.on(channel, (_event, ...args) => callback(...args));
+      } else {
+        console.warn(`[LiveFront] 尝试监听未授权频道: ${channel}`);
+      }
+    },
   },
-  preview: {
-    start: (projectPath, options) => ipcRenderer.invoke('preview:start', projectPath, options),
-    stop: () => ipcRenderer.invoke('preview:stop'),
-    getUrl: (filePath) => ipcRenderer.invoke('preview:url', filePath),
-    getPort: () => ipcRenderer.invoke('preview:port'),
-    setEffects: (css) => ipcRenderer.invoke('preview:set-effects', css),
-    openExternalWindow: (url) => ipcRenderer.invoke('preview:open-external-window', url),
-    refreshExternal: () => ipcRenderer.invoke('preview:refresh-external')
-  },
-  git: {
-    init: (opts) => ipcRenderer.invoke('git:init', opts),
-    status: (opts) => ipcRenderer.invoke('git:status', opts),
-    log: (opts) => ipcRenderer.invoke('git:log', opts),
-    stage: (opts) => ipcRenderer.invoke('git:stage', opts),
-    unstage: (opts) => ipcRenderer.invoke('git:unstage', opts),
-    commit: (opts) => ipcRenderer.invoke('git:commit', opts),
-    branches: (opts) => ipcRenderer.invoke('git:branches', opts),
-    checkout: (opts) => ipcRenderer.invoke('git:checkout', opts),
-    createBranch: (opts) => ipcRenderer.invoke('git:create-branch', opts),
-    diff: (opts) => ipcRenderer.invoke('git:diff', opts),
-    discard: (opts) => ipcRenderer.invoke('git:discard', opts)
-  },
+});
 
-  project: {
-    exportZip: (opts) => ipcRenderer.invoke('project:export-zip', opts)
-  },
-
-  bridge: {
-    sendToExtension: (summary, target) => ipcRenderer.invoke('bridge:send-to-extension', { summary, target }),
-    isConnected: () => ipcRenderer.invoke('bridge:is-connected')
-  },
-  agent: {
-    scan: () => ipcRenderer.invoke('agent:scan'),
-    getConfig: (agentName) => ipcRenderer.invoke('agent:get-config', agentName),
-    saveConfig: (agentName, config) => ipcRenderer.invoke('agent:save-config', { agentName, config })
-  },
-  mcp: {
-    startServer: (port) => ipcRenderer.invoke('mcp:start-server', port),
-    stopServer: () => ipcRenderer.invoke('mcp:stop-server'),
-    getTools: () => ipcRenderer.invoke('mcp:get-tools'),
-    callTool: (tool, args) => ipcRenderer.invoke('mcp:call-tool', { tool, args }),
-    getConfig: () => ipcRenderer.invoke('mcp:get-config'),
-    connectServer: (config) => ipcRenderer.invoke('mcp:connect-server', config),
-    disconnectServer: (name) => ipcRenderer.invoke('mcp:disconnect-server', name),
-    listConnectedServers: () => ipcRenderer.invoke('mcp:list-connected-servers'),
-    listRemoteTools: (name) => ipcRenderer.invoke('mcp:list-remote-tools', name),
-    callRemoteTool: (serverName, tool, args) => ipcRenderer.invoke('mcp:call-remote-tool', { serverName, tool, args }),
-    importFromClaudeDesktop: (configPath) => ipcRenderer.invoke('mcp:import-claude-desktop', configPath),
-    importFromCursor: (configPath) => ipcRenderer.invoke('mcp:import-cursor', configPath),
-    onClientsChanged: (callback) => {
-      const handler = (_e, data) => callback(data)
-      ipcRenderer.on('mcp:clients-changed', handler)
-      return () => ipcRenderer.removeListener('mcp:clients-changed', handler)
-    }
-  }
-}
-
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', {
-    ipcRenderer: {
-      invoke: ipcRenderer.invoke.bind(ipcRenderer),
-      send: ipcRenderer.send.bind(ipcRenderer),
-      on: ipcRenderer.on.bind(ipcRenderer),
-      removeListener: ipcRenderer.removeListener.bind(ipcRenderer)
-    }
-  })
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  window.electron = { ipcRenderer }
-  window.api = api
-}

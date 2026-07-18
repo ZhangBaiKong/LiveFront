@@ -1,3 +1,0 @@
-export default {
-  "css": "/* 精选渐变色预设 */\n\n/* 日落橙 */\n.gradient-sunset {\n  background: linear-gradient(135deg, #f97316, #ec4899, #8b5cf6);\n}\n\n/* 海洋蓝 */\n.gradient-ocean {\n  background: linear-gradient(135deg, #0ea5e9, #06b6d4, #10b981);\n}\n\n/* 极光 */\n.gradient-aurora {\n  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa, #c084fc);\n}\n\n/* 翡翠 */\n.gradient-emerald {\n  background: linear-gradient(135deg, #10b981, #059669, #047857);\n}\n\n/* 薰衣草 */\n.gradient-lavender {\n  background: linear-gradient(135deg, #a78bfa, #818cf8, #6366f1);\n}\n\n/* 火焰 */\n.gradient-fire {\n  background: linear-gradient(135deg, #ef4444, #f97316, #f59e0b);\n}"
-};

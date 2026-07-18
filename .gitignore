@@ -1,16 +1,38 @@
-﻿node_modules/
+﻿# LiveFront v2.0 .gitignore
+
+# ── 依赖 ──
+node_modules/
+
+# ── 构建输出 ──
 dist/
 out/
-.DS_Store
-*.log
-.livefront/
-release-output/
 build-output/
 dist-output/
 dist-*/
-release-*/
-Thumbs.db
+release-output/
 release/
+release-*/
+
+# ── 编辑器配置 ──
+.vscode/
+
+# ── 系统文件 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 日志 ──
+*.log
+
+# ── 运行时数据 ──
+.livefront/
+
+# ── 敏感信息 ──
+.env
+.env.local
+.env.*.local
+
+# ── 图片资源（不纳入版本控制） ──
 sponsor-wechat.jpg
 wechat-group.jpg
-.vscode/
+

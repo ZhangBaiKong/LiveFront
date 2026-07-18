@@ -1,238 +1,135 @@
-/* LiveFront 鍏变韩鏈嶅姟 */
-window.LiveFront = window.LiveFront || {};
+﻿/**
+ * LiveFront v2.0 — 全局共享服务层
+ *
+ * 封装常用的全局能力：
+ *   - 状态管理（响应式状态 + 变更通知）
+ *   - UI 提示（Toast 通知）
+ *   - 任务队列
+ *
+ * 所有模块通过 app.services 统一访问，避免各自实现重复逻辑。
+ */
 
-LiveFront.Services = {
-  fileSystem: {
-    readDir(p) { return LiveFront.ipc.invoke('fs:read-dir', p); },
-    readFile(p) { return LiveFront.ipc.invoke('fs:read-file', p); },
-    writeFile(p, c) { return LiveFront.ipc.invoke('fs:write-file', p, c); },
-    createFile(p, c) { return LiveFront.ipc.invoke('fs:create-file', p, c); },
-    createDir(p) { return LiveFront.ipc.invoke('fs:create-dir', p); },
-    deleteFile(p) { return LiveFront.ipc.invoke('fs:delete-file', p); },
-    rename(o, n) { return LiveFront.ipc.invoke('fs:rename', o, n); },
-    stat(p) { return LiveFront.ipc.invoke('fs:stat', p); },
-    exists(p) { return LiveFront.ipc.invoke('fs:exists', p); },
-    watch(d) { return LiveFront.ipc.invoke('fs:watch', d); },
-    unwatch() { return LiveFront.ipc.invoke('fs:unwatch'); },
-    onFileChanged(cb) { if (window.api?.fs?.onFileChanged) return window.api.fs.onFileChanged(cb); },
-    onFileAdded(cb) { if (window.api?.fs?.onFileAdded) return window.api.fs.onFileAdded(cb); },
-    onFileRemoved(cb) { if (window.api?.fs?.onFileRemoved) return window.api.fs.onFileRemoved(cb); }
-  },
-  dialog: {
-    openFolder() { return LiveFront.ipc.invoke('dialog:open-folder'); },
-    openFile(f) { return LiveFront.ipc.invoke('dialog:open-file', f); },
-    saveFile(f) { return LiveFront.ipc.invoke('dialog:save-file', f); },
-    confirm(m) { return LiveFront.ipc.invoke('dialog:confirm', m); }
-  },
-  preview: {
-    start(projectPath, options) { return LiveFront.ipc.invoke('preview:start', projectPath, options); },
-    stop() { return LiveFront.ipc.invoke('preview:stop'); },
-    getUrl(filePath) { return LiveFront.ipc.invoke('preview:url', filePath); },
-    getPort() { return LiveFront.ipc.invoke('preview:port'); },
-    setEffects(css) { return LiveFront.ipc.invoke('preview:set-effects', css); },
-    openExternalWindow(url) { return LiveFront.ipc.invoke('preview:open-external-window', url); },
-    refreshExternal() { return LiveFront.ipc.invoke('preview:refresh-external'); }
-  },
+export class SharedServices {
+  /**
+   * @param {import("./event-bus.js").EventBus} eventBus - 全局事件总线
+   * @param {import("./ipc-client.js").IpcClient} ipc - IPC 客户端
+   */
+  constructor(eventBus, ipc) {
+    this.eventBus = eventBus;
+    this.ipc = ipc;
 
-  terminal: {
-    async create(opts) {
-      const result = await window.api.terminal.create(opts)
-      if (result.error) throw new Error(result.error)
-      return result
-    },
-    write(termId, data) {
-      window.api.terminal.write({ termId, data })
-    },
-    resize(termId, cols, rows) {
-      window.api.terminal.resize({ termId, cols, rows })
-    },
-    kill(termId) {
-      window.api.terminal.kill(termId)
-    },
-    onData(callback) {
-      return window.api.terminal.onData(callback)
-    },
-    onExit(callback) {
-      return window.api.terminal.onExit(callback)
-    }
-  },
-  ai: {
-    request(params) { return LiveFront.ipc.invoke('ai:request', params); },
-    streamRequest(params) { return LiveFront.ipc.invoke('ai:stream-request', params); },
-    cancelStream(termId) { if (window.api?.ai?.cancelStream) window.api.ai.cancelStream(termId); },
-    onStreamChunk(cb) { if (window.api?.ai?.onStreamChunk) return window.api.ai.onStreamChunk(cb); },
-    onStreamEnd(cb) { if (window.api?.ai?.onStreamEnd) return window.api.ai.onStreamEnd(cb); },
-    onStreamError(cb) { if (window.api?.ai?.onStreamError) return window.api.ai.onStreamError(cb); }
-  },
-  
-  project: {
-    async exportZip(projectPath, outputPath) {
-      return window.api.project.exportZip({ projectPath, outputPath });
-    },
-    async detectBuildTool(projectPath) {
-      return LiveFront.BuildManager.detectBuildTool(projectPath);
-    }
-  },
-
-  app: {
-    getVersion() { return LiveFront.ipc.invoke('app:get-version'); },
-    getRecentProjects() { return LiveFront.Storage.get('recentProjects', []); },
-    addRecentProject(p) {
-      let r = LiveFront.Storage.get('recentProjects', []);
-      r = r.filter(x => x !== p);
-      r.unshift(p);
-      if (r.length > 10) r = r.slice(0, 10);
-      LiveFront.Storage.set('recentProjects', r);
-    }
-  },
-  mcp: {
-    async startServer(port) {
-      return window.api.mcp.startServer(port);
-    },
-    async stopServer() {
-      return window.api.mcp.stopServer();
-    },
-    async getTools() {
-      return window.api.mcp.getTools();
-    },
-    async callTool(tool, args) {
-      return window.api.mcp.callTool(tool, args);
-    },
-    async getConfig() {
-      return window.api.mcp.getConfig();
-    },
-    async connectServer(config) {
-      return window.api.mcp.connectServer(config);
-    },
-    async disconnectServer(name) {
-      return window.api.mcp.disconnectServer(name);
-    },
-    async listConnectedServers() {
-      return window.api.mcp.listConnectedServers();
-    },
-    async listRemoteTools(name) {
-      try {
-        return await window.api.mcp.listRemoteTools(name);
-      } catch (error) {
-        const wrapped = new Error(error?.message || '刷新 MCP 工具失败');
-        wrapped.code = error?.code || 'MCP_LIST_FAILED';
-        wrapped.original = error;
-        throw wrapped;
-      }
-    },
-    async callRemoteTool(serverName, tool, args) {
-      try {
-        return await window.api.mcp.callRemoteTool(serverName, tool, args);
-      } catch (error) {
-        const code = error?.code || 'MCP_CALL_FAILED';
-        const message = error?.message || 'MCP 调用失败';
-        const wrapped = new Error(message);
-        wrapped.code = code;
-        wrapped.original = error;
-        throw wrapped;
-      }
-    },
-    async importFromClaudeDesktop(configPath) {
-      return window.api.mcp.importFromClaudeDesktop(configPath);
-    },
-    async importFromCursor(configPath) {
-      return window.api.mcp.importFromCursor(configPath);
-    },
-    onClientsChanged(cb) {
-      if (window.api?.mcp?.onClientsChanged) return window.api.mcp.onClientsChanged(cb);
-    }
-  },
-  agent: {
-    async scan() {
-      return window.api.agent.scan();
-    },
-    async getConfig(name) {
-      return window.api.agent.getConfig(name);
-    },
-    async saveConfig(name, config) {
-      return window.api.agent.saveConfig(name, config);
-    }
+    /**
+     * 全局状态树
+     * 模块应通过 getState / setState 读写，保持响应式
+     */
+    this._state = {
+      project: {
+        path: null,
+        name: null,
+        isOpen: false,
+      },
+      preview: {
+        isRunning: false,
+        port: null,
+        url: null,
+        device: "desktop", // desktop | tablet | mobile
+      },
+      selection: {
+        element: null,
+        selector: null,
+        tagName: null,
+        className: null,
+        id: null,
+      },
+      ai: {
+        isStreaming: false,
+        messages: [],
+        provider: null,
+      },
+      topology: {
+        modules: [],
+        connections: [],
+        isAnalyzing: false,
+      },
+      settings: {
+        ui: { theme: "dark" },
+        terminal: { defaultShell: "powershell" },
+        preview: { defaultDevice: "desktop", portPreference: 9527 },
+        ai: { historySize: 100 },
+      },
+    };
   }
-};
 
-LiveFront.state = {
-  currentProjectPath: null,
-  projectTree: null,
-  openFiles: [],
-  activeFile: null,
-  fileContents: {},
-  fileDirty: {},
-  selectedElement: null
-};
+  /**
+   * 获取状态（支持路径访问）
+   * @param {string} [path] - 状态路径，如 "project.path"、"preview.device"
+   * @returns {any}
+   *
+   * @example
+   * services.getState("project.path")  // "/Users/..."
+   * services.getState("preview")       // { isRunning: false, ... }
+   * services.getState()                 // 完整状态树
+   */
+  getState(path) {
+    if (!path) return this._state;
 
-LiveFront.Services.framework = {
-  async detect(projectPath) {
-    if (!LiveFront.FrameworkDetector?.detect) {
-      return { framework: "html", hasNodeModules: false, hasBuildScript: false }
+    const keys = path.split(".");
+    let current = this._state;
+    for (const key of keys) {
+      if (current == null) return undefined;
+      current = current[key];
     }
-    return LiveFront.FrameworkDetector.detect(projectPath)
+    return current;
+  }
+
+  /**
+   * 设置状态（支持路径访问 + 自动通知）
+   * @param {string} path - 状态路径
+   * @param {any} value - 新值
+   *
+   * @example
+   * services.setState("project.path", "/Users/me/project")
+   * services.setState("preview.device", "tablet")
+   */
+  setState(path, value) {
+    const keys = path.split(".");
+    let current = this._state;
+
+    // 导航到目标对象的父级
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (current[keys[i]] == null) {
+        current[keys[i]] = {};
+      }
+      current = current[keys[i]];
+    }
+
+    const lastKey = keys[keys.length - 1];
+    const oldValue = current[lastKey];
+    current[lastKey] = value;
+
+    // 通知状态变更
+    this.eventBus.emit("state:change", { path, value, oldValue });
+    this.eventBus.emit(`state:change:${path}`, { value, oldValue });
+  }
+
+  /**
+   * 显示 Toast 通知
+   * @param {string} message - 消息内容
+   * @param {"info" | "success" | "warning" | "error"} [type="info"] - 通知类型
+   * @param {number} [duration=3000] - 持续时间（毫秒）
+   */
+  toast(message, type = "info", duration = 3000) {
+    this.eventBus.emit("toast:show", { message, type, duration });
+    console.log(`[Toast][${type}] ${message}`);
+  }
+
+  /**
+   * 更新状态栏项目信息
+   * @param {string} text - 状态栏文本
+   */
+  updateStatus(text) {
+    const el = document.getElementById("status-project");
+    if (el) el.textContent = text;
   }
 }
 
-
-LiveFront.Services.codeBridge = {
-  async importFromClipboard() {
-    const text = await navigator.clipboard.readText()
-    if (!text) return { imported: false, reason: 'clipboard_empty' }
-    const guess = guessFilenameFromCode(text)
-    const projectPath = LiveFront.state.currentProjectPath
-    if (!projectPath) return { imported: false, reason: 'no_project' }
-    const filePath = await LiveFront.Services.fileSystem.createFile(projectPath + '/' + guess.filename, text)
-    return { imported: true, filePath, filename: guess.filename, language: guess.language }
-  },
-  async importFromFolder(folderPath) {
-    if (!folderPath) return { imported: false, reason: 'no_folder' }
-    const exists = await LiveFront.Services.fileSystem.exists(folderPath)
-    if (!exists) return { imported: false, reason: 'folder_missing' }
-    return { imported: true, folderPath }
-  },
-  async importFromAPI(code, filename, source, project) {
-    if (!code) return { imported: false, reason: 'empty_code' }
-    const projectPath = project || LiveFront.state.currentProjectPath
-    if (!projectPath) return { imported: false, reason: 'no_project' }
-    const safeName = filename || guessFilenameFromCode(code).filename
-    const filePath = await LiveFront.Services.fileSystem.createFile(projectPath + '/' + safeName, code)
-    return { imported: true, filePath, filename: safeName, source: source || 'api' }
-  },
-  async importFromDragDrop(fileList) {
-    const results = []
-    for (const file of fileList || []) {
-      const text = await file.text()
-      const projectPath = LiveFront.state.currentProjectPath
-      if (!projectPath) {
-        results.push({ filename: file.name, imported: false, reason: 'no_project' })
-        continue
-      }
-      const filePath = await LiveFront.Services.fileSystem.createFile(projectPath + '/' + file.name, text)
-      results.push({ filename: file.name, imported: true, filePath })
-    }
-    return results
-  }
-}
-
-function guessFilenameFromCode(code) {
-  const trimmed = (code || '').trim()
-  if (trimmed.startsWith('<')) return { filename: 'clipboard.html', language: 'html' }
-  if (trimmed.includes('export default') || trimmed.includes('import ') || trimmed.includes('function ')) return { filename: 'clipboard.js', language: 'javascript' }
-  return { filename: 'clipboard.txt', language: 'plaintext' }
-}
-
-LiveFront.Services.bridge = {
-  sendToExtension(summary, target) {
-    if (window.api?.bridge?.sendToExtension) {
-      return window.api.bridge.sendToExtension(summary, target);
-    }
-    return Promise.resolve({ success: false, error: 'bridge not available' });
-  },
-  isConnected() {
-    if (window.api?.bridge?.isConnected) {
-      return window.api.bridge.isConnected();
-    }
-    return Promise.resolve({ connected: false });
-  }
-};

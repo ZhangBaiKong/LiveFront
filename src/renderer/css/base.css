@@ -1,0 +1,103 @@
+﻿/**
+ * LiveFront v2.0 — 基础样式重置
+ *
+ * 统一浏览器默认样式，确保跨平台一致性。
+ * 所有元素使用 border-box 盒模型。
+ */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none; /* 应用整体禁止选择，编辑区域单独开启 */
+}
+
+/* ── 链接 ── */
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* ── 按钮基础重置 ── */
+button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ── 输入框基础样式 ── */
+input,
+textarea,
+select {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  outline: none;
+  transition: border-color var(--duration-normal) var(--ease-default);
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-border-focus);
+}
+
+/* ── 滚动条样式（WebKit） ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+/* ── 选中文本 ── */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+/* ── 禁止拖拽（除特定元素外） ── */
+img,
+a,
+button {
+  -webkit-user-drag: none;
+}
+
