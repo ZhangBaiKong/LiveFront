@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LiveFront v2.0 — IPC 通信客户端
  *
  * 封装 window.LiveFront（由 preload 脚本注入）的调用，

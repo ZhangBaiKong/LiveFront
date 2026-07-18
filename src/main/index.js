@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LiveFront v2.0 — Electron 主进程入口
  *
  * 职责：

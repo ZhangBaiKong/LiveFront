@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LiveFront v2.0 — electron-vite 配置
  *
  * 配置 main、preload、renderer 三个入口：
