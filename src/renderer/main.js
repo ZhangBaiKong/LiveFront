@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LiveFront v2.0 – 渲染进程入口
  *
  * 职责：
@@ -89,7 +89,10 @@ async function initApp() {
   // 6. 绑定模块间事件
   bindModuleEvents();
 
-  // 7. 标记就绪
+  // 7. 初始化欢迎页
+  initWelcomePage();
+
+  // 8. 标记就绪
   app.ready = true;
   app.eventBus.emit("app:ready");
   console.log("[LiveFront] 应用就绪 ✅");
@@ -128,18 +131,38 @@ function initModules() {
  * 实现文件树和预览区的联动
  */
 function bindModuleEvents() {
-  // 当文件夹被打开时，启动预览
+  // 从最近项目打开文件夹（按路径直接打开）
+  app.eventBus.on("filetree:open-project", async ({ path: projectPath }) => {
+    const folderName = projectPath.split(/[\\\/]/).pop();
+    app.services.setState("project.path", projectPath);
+    app.services.setState("project.name", folderName);
+    app.services.setState("project.isOpen", true);
+    filetreeModule.renderTree(projectPath);
+    app.eventBus.emit("filetree:folder-opened", { path: projectPath, name: folderName });
+  });
+
+  // 当文件夹被打开时，启动预览并保存最近项目
   app.eventBus.on("filetree:folder-opened", async ({ path: projectPath, name }) => {
     console.log(`[LiveFront] 项目已打开: ${name} (${projectPath})`);
+
+    // 保存到最近项目
+    saveRecentProject(projectPath, name);
+
+    // 更新状态栏
+    const statusProject = document.getElementById("status-project");
+    if (statusProject) statusProject.textContent = name;
+
+    // 更新状态指示灯
+    const statusDot = document.querySelector(".status-dot");
+    if (statusDot) statusDot.classList.add("connected");
 
     // 启动预览
     await previewModule.startPreview(projectPath);
   });
 
-  // 当文件被选中时，如果是 HTML 文件且当前没有预览，可以单独预览
+  // 当文件被选中时
   app.eventBus.on("filetree:file-selected", ({ path: filePath, extension }) => {
     console.log(`[LiveFront] 文件选中: ${filePath}`);
-    // 后续可以实现：单文件预览、代码编辑等功能
   });
 
   // 当元素被选中时，更新右侧属性面板
@@ -232,7 +255,6 @@ function bindModuleEvents() {
 
 /**
  * 绑定全局 UI 交互事件
- * 处理窗口控制按钮、拓扑面板折叠等
  */
 function bindGlobalUI() {
   // 拓扑面板折叠/展开
@@ -272,10 +294,118 @@ async function updateAppInfo() {
   }
 }
 
+// ── 欢迎页相关函数 ──
+
+/**
+ * 初始化欢迎页
+ */
+function initWelcomePage() {
+  const welcomePage = document.getElementById("welcome-page");
+  const workspace = document.getElementById("workspace");
+  if (!welcomePage || !workspace) return;
+
+  // 默认显示欢迎页，隐藏工作区
+  welcomePage.removeAttribute("hidden");
+  workspace.setAttribute("hidden", "");
+
+  // "打开项目"按钮 → 触发打开文件夹
+  const btnOpen = document.getElementById("btn-open-project");
+  if (btnOpen) {
+    btnOpen.addEventListener("click", () => {
+      app.commands.execute("filetree.openFolder");
+    });
+  }
+
+  // "新建项目"按钮 → 提示暂未实现
+  const btnNew = document.getElementById("btn-new-project");
+  if (btnNew) {
+    btnNew.addEventListener("click", () => {
+      app.services.toast("新建项目功能即将上线", "info");
+    });
+  }
+
+  // 监听项目打开事件，切换到工作区
+  app.eventBus.on("filetree:folder-opened", () => {
+    showWorkspace();
+  });
+
+  // 加载最近项目列表
+  loadRecentProjects();
+}
+
+/**
+ * 从欢迎页切换到主工作区
+ */
+function showWorkspace() {
+  const welcomePage = document.getElementById("welcome-page");
+  const workspace = document.getElementById("workspace");
+  if (welcomePage) welcomePage.setAttribute("hidden", "");
+  if (workspace) workspace.removeAttribute("hidden");
+}
+
+/**
+ * 从主工作区切换回欢迎页
+ */
+function showWelcomePage() {
+  const welcomePage = document.getElementById("welcome-page");
+  const workspace = document.getElementById("workspace");
+  if (welcomePage) welcomePage.removeAttribute("hidden");
+  if (workspace) workspace.setAttribute("hidden", "");
+}
+
+/**
+ * 保存最近项目到 localStorage
+ */
+function saveRecentProject(projectPath, name) {
+  let recent = [];
+  try {
+    recent = JSON.parse(localStorage.getItem("livefront:recentProjects") || "[]");
+  } catch {}
+  recent = recent.filter((item) => item.path !== projectPath);
+  recent.unshift({ path: projectPath, name, time: Date.now() });
+  recent = recent.slice(0, 10);
+  localStorage.setItem("livefront:recentProjects", JSON.stringify(recent));
+}
+
+/**
+ * 加载最近项目列表
+ */
+function loadRecentProjects() {
+  const list = document.getElementById("welcome-recent-list");
+  if (!list) return;
+
+  let recent = [];
+  try {
+    recent = JSON.parse(localStorage.getItem("livefront:recentProjects") || "[]");
+  } catch {}
+
+  if (recent.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--color-text-tertiary);font-size:var(--text-sm);padding:var(--space-lg) 0">暂无最近项目</div>';
+    return;
+  }
+
+  list.innerHTML = recent.map((item) => `
+    <div class="welcome-recent-item" data-path="${escapeHtml(item.path)}">
+      <span class="welcome-recent-icon">📁</span>
+      <div class="welcome-recent-info">
+        <div class="welcome-recent-name">${escapeHtml(item.name)}</div>
+        <div class="welcome-recent-path">${escapeHtml(item.path)}</div>
+      </div>
+    </div>
+  `).join("");
+
+  list.addEventListener("click", (e) => {
+    const item = e.target.closest(".welcome-recent-item");
+    if (!item) return;
+    const projectPath = item.dataset.path;
+    if (projectPath) {
+      app.eventBus.emit("filetree:open-project", { path: projectPath });
+    }
+  });
+}
+
 /**
  * HTML 转义
- * @param {string} str
- * @returns {string}
  */
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

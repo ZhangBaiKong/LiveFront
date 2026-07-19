@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/layout.css">
   <link rel="stylesheet" href="./css/modules.css">
+  <link rel="stylesheet" href="./css/welcome.css">
 </head>
 <body>
 
@@ -36,8 +37,37 @@
     </div>
   </header>
 
+  <!-- ── 欢迎页 ── -->
+  <section class="welcome-page" id="welcome-page">
+    <div class="welcome-main">
+      <div class="welcome-logo-section">
+        <div class="welcome-logo-icon">LF</div>
+        <div class="welcome-logo-title">LiveFront</div>
+        <div class="welcome-logo-slogan">AI 是笔，LiveFront 是画板。</div>
+      </div>
+      <div class="welcome-actions">
+        <div class="welcome-action-card" id="btn-new-project">
+          <div class="welcome-card-icon new-project-icon">✦</div>
+          <div class="welcome-card-title">新建项目</div>
+          <div class="welcome-card-desc">AI 从零生成</div>
+        </div>
+        <div class="welcome-action-card" id="btn-open-project">
+          <div class="welcome-card-icon open-project-icon">📂</div>
+          <div class="welcome-card-title">打开项目</div>
+          <div class="welcome-card-desc">打开已有文件</div>
+        </div>
+      </div>
+      <div class="welcome-recent-section" id="welcome-recent">
+        <div class="welcome-recent-title">最近打开</div>
+        <div class="welcome-recent-list" id="welcome-recent-list">
+          <!-- 动态填充 -->
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ── 主工作区 ── -->
-  <main class="workspace">
+  <main class="workspace" id="workspace" hidden>
 
     <!-- 左侧：文件树 -->
     <aside class="panel file-tree">

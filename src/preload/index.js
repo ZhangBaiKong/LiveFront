@@ -44,6 +44,7 @@ const IPC_CHANNELS = {
   on: [
     // 监听频道（主进程 → 渲染进程）
     "preview:message",
+    "menu:openFolder",
   ],
 };
 

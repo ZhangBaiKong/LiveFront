@@ -1,0 +1,191 @@
+﻿/**
+ * LiveFront v2.0 – 欢迎页样式
+ */
+
+.welcome-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 隐藏状态 */
+.welcome-page[hidden] {
+  display: none;
+}
+
+/* 背景光晕 */
+.welcome-page::before {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(79, 143, 247, 0.06) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.welcome-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xl);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Logo 区域 ── */
+.welcome-logo-section {
+  text-align: center;
+}
+
+.welcome-logo-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--space-xl);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-secondary) 100%);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: var(--font-bold);
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(79, 143, 247, 0.25);
+}
+
+.welcome-logo-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
+  letter-spacing: -0.5px;
+}
+
+.welcome-logo-slogan {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+/* ── 操作卡片 ── */
+.welcome-actions {
+  display: flex;
+  gap: 20px;
+}
+
+.welcome-action-card {
+  width: 220px;
+  padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--duration-normal), box-shadow var(--duration-normal), transform var(--duration-fast);
+}
+
+.welcome-action-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.welcome-card-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-lg);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.new-project-icon {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.open-project-icon {
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--color-accent-secondary);
+}
+
+.welcome-card-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.welcome-card-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ── 最近项目 ── */
+.welcome-recent-section {
+  width: 480px;
+}
+
+.welcome-recent-title {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.welcome-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.welcome-recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px var(--space-md);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.welcome-recent-item:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border);
+}
+
+.welcome-recent-icon {
+  font-size: 18px;
+  color: var(--color-text-tertiary);
+}
+
+.welcome-recent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.welcome-recent-name {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  font-weight: var(--font-medium);
+}
+
+.welcome-recent-path {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
