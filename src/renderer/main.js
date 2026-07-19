@@ -92,7 +92,7 @@ async function initApp() {
   // 7. 标记就绪
   app.ready = true;
   app.eventBus.emit("app:ready");
-  console.log("[LiveFront] 应用就绪 \u2705");
+  console.log("[LiveFront] 应用就绪 ✅");
 }
 
 /**
@@ -148,7 +148,7 @@ function bindModuleEvents() {
     if (content) {
       content.innerHTML = `
         <div class="prop-section">
-          <div class="prop-label">\u6807\u7b7e</div>
+          <div class="prop-label">标签</div>
           <div class="prop-value">&lt;${escapeHtml(elementInfo.tagName)}&gt;</div>
         </div>
         ${elementInfo.id ? `
@@ -158,42 +158,42 @@ function bindModuleEvents() {
         </div>` : ""}
         ${elementInfo.className ? `
         <div class="prop-section">
-          <div class="prop-label">\u7c7b\u540d</div>
+          <div class="prop-label">类名</div>
           <div class="prop-value">${escapeHtml(elementInfo.className)}</div>
         </div>` : ""}
         <div class="prop-section">
-          <div class="prop-label">\u5c3a\u5bf8</div>
-          <div class="prop-value">${elementInfo.rect.width} \u00d7 ${elementInfo.rect.height}</div>
+          <div class="prop-label">尺寸</div>
+          <div class="prop-value">${elementInfo.rect.width} × ${elementInfo.rect.height}</div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u4f4d\u7f6e</div>
+          <div class="prop-label">位置</div>
           <div class="prop-value">(${elementInfo.rect.x}, ${elementInfo.rect.y})</div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u663e\u793a</div>
+          <div class="prop-label">显示</div>
           <div class="prop-value">${elementInfo.styles.display}</div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u5b9a\u4f4d</div>
+          <div class="prop-label">定位</div>
           <div class="prop-value">${elementInfo.styles.position}</div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u5b57\u53f7</div>
+          <div class="prop-label">字号</div>
           <div class="prop-value">${elementInfo.styles.fontSize}</div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u5b57\u91cd</div>
+          <div class="prop-label">字重</div>
           <div class="prop-value">${elementInfo.styles.fontWeight}</div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u989c\u8272</div>
+          <div class="prop-label">颜色</div>
           <div class="prop-value" style="display:flex;align-items:center;gap:6px">
             <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${elementInfo.styles.color};border:1px solid var(--color-border)"></span>
             ${elementInfo.styles.color}
           </div>
         </div>
         <div class="prop-section">
-          <div class="prop-label">\u80cc\u666f</div>
+          <div class="prop-label">背景</div>
           <div class="prop-value" style="display:flex;align-items:center;gap:6px">
             <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${elementInfo.styles.backgroundColor};border:1px solid var(--color-border)"></span>
             ${elementInfo.styles.backgroundColor}
@@ -214,17 +214,17 @@ function bindModuleEvents() {
     newBtn.addEventListener("click", async () => {
       const projectPath = app.services.getState("project.path");
       if (!projectPath) {
-        app.services.toast("\u8bf7\u5148\u6253\u5f00\u4e00\u4e2a\u9879\u76ee\u6587\u4ef6\u5939", "warning");
+        app.services.toast("请先打开一个项目文件夹", "warning");
         return;
       }
-      const name = prompt("\u8f93\u5165\u6587\u4ef6\u540d:");
+      const name = prompt("输入文件名:");
       if (!name) return;
       const result = await app.ipc.fs.createFile(projectPath, name);
       if (result) {
-        app.services.toast(`\u5df2\u521b\u5efa: ${name}`, "success");
+        app.services.toast(`已创建: ${name}`, "success");
         filetreeModule.renderTree(projectPath);
       } else {
-        app.services.toast("\u521b\u5efa\u6587\u4ef6\u5931\u8d25", "error");
+        app.services.toast("创建文件失败", "error");
       }
     });
   }
@@ -241,7 +241,7 @@ function bindGlobalUI() {
   if (topologyToggle && topologyPanel) {
     topologyToggle.addEventListener("click", () => {
       topologyPanel.classList.toggle("collapsed");
-      topologyToggle.textContent = topologyPanel.classList.contains("collapsed") ? "\u25bc" : "\u25b2";
+      topologyToggle.textContent = topologyPanel.classList.contains("collapsed") ? "▼" : "▲";
     });
   }
 

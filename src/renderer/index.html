@@ -21,18 +21,18 @@
   <header class="topbar">
     <div class="topbar-left">
       <span class="topbar-logo">
-        <span class="topbar-logo-icon">\u25cf</span>
+        <span class="topbar-logo-icon">●</span>
         LiveFront
       </span>
       <nav class="topbar-menu">
-        <span class="topbar-menu-item">\u6587\u4ef6</span>
-        <span class="topbar-menu-item">\u7f16\u8f91</span>
-        <span class="topbar-menu-item">\u89c6\u56fe</span>
-        <span class="topbar-menu-item">\u5e2e\u52a9</span>
+        <span class="topbar-menu-item">文件</span>
+        <span class="topbar-menu-item">编辑</span>
+        <span class="topbar-menu-item">视图</span>
+        <span class="topbar-menu-item">帮助</span>
       </nav>
     </div>
     <div class="topbar-right">
-      <button class="topbar-btn" title="\u8bbe\u7f6e">\u2699\ufe0f</button>
+      <button class="topbar-btn" title="设置">⚙️</button>
     </div>
   </header>
 
@@ -42,16 +42,16 @@
     <!-- 左侧：文件树 -->
     <aside class="panel file-tree">
       <div class="panel-header">
-        <span class="panel-title">\u6587\u4ef6</span>
+        <span class="panel-title">文件</span>
         <div class="panel-actions">
-          <button class="panel-btn" title="\u21bb \u5237\u65b0">\u21bb</button>
-          <button class="panel-btn ft-new-btn" title="+ \u65b0\u5efa\u6587\u4ef6">+</button>
+          <button class="panel-btn" title="↻ 刷新">↻</button>
+          <button class="panel-btn ft-new-btn" title="+ 新建文件">+</button>
         </div>
       </div>
       <div class="panel-content" id="filetree-container">
         <div class="empty-state">
-          <span class="empty-state-icon">\ud83d\udcc1</span>
-          <span class="empty-state-text">\u6253\u5f00\u4e00\u4e2a\u6587\u4ef6\u5939\u5f00\u59cb</span>
+          <span class="empty-state-icon">📁</span>
+          <span class="empty-state-text">打开一个文件夹开始</span>
         </div>
       </div>
     </aside>
@@ -60,20 +60,20 @@
     <section class="center">
       <div class="preview-toolbar">
         <div class="device-btns">
-          <button class="device-btn active" data-device="desktop" title="\u684c\u9762">\ud83d\uddfa\ufe0f</button>
-          <button class="device-btn" data-device="tablet" title="\u5e73\u677f">\ud83d\udcf1</button>
-          <button class="device-btn" data-device="mobile" title="\u624b\u673a">\ud83d\udcf1</button>
+          <button class="device-btn active" data-device="desktop" title="桌面">🗺️</button>
+          <button class="device-btn" data-device="tablet" title="平板">📱</button>
+          <button class="device-btn" data-device="mobile" title="手机">📱</button>
         </div>
-        <span class="preview-url" id="preview-url">\u7b49\u5f85\u9884\u89c8\u2026</span>
+        <span class="preview-url" id="preview-url">等待预览…</span>
         <div class="preview-actions">
-          <button class="preview-btn" title="\u21bb \u5237\u65b0\u9884\u89c8">\u21bb</button>
-          <button class="preview-btn" title="\u2197 \u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00">\u2197</button>
+          <button class="preview-btn" title="↻ 刷新预览">↻</button>
+          <button class="preview-btn" title="↗ 在浏览器中打开">↗</button>
         </div>
       </div>
       <div class="preview-container" id="preview-container">
         <div class="empty-state">
-          <span class="empty-state-icon">\ud83c\udfa8</span>
-          <span class="empty-state-text">\u9884\u89c8\u533a\u5c06\u5728\u6253\u5f00\u9879\u76ee\u540e\u663e\u793a</span>
+          <span class="empty-state-icon">🎨</span>
+          <span class="empty-state-text">预览区将在打开项目后显示</span>
         </div>
       </div>
     </section>
@@ -81,13 +81,13 @@
     <!-- 右侧：属性面板 / AI 对话 -->
     <aside class="panel right-panel">
       <div class="panel-tabs">
-        <button class="panel-tab active">\u5c5e\u6027</button>
+        <button class="panel-tab active">属性</button>
         <button class="panel-tab">AI</button>
       </div>
       <div class="panel-content" id="right-panel-content">
         <div class="empty-state">
-          <span class="empty-state-icon">\ud83d\udccc</span>
-          <span class="empty-state-text">\u9009\u4e2d\u5143\u7d20\u540e\u663e\u793a\u5c5e\u6027</span>
+          <span class="empty-state-icon">📌</span>
+          <span class="empty-state-text">选中元素后显示属性</span>
         </div>
       </div>
     </aside>
@@ -97,13 +97,13 @@
   <!-- ── 底部：拓扑图区域 ── -->
   <section class="topology-panel" id="topology-panel">
     <div class="topology-header">
-      <span class="topology-title">\u9875\u9762\u62d3\u6251</span>
-      <button class="topology-toggle" id="topology-toggle" title="\u5c55\u5f00/\u6298\u53e0">\u25b2</button>
+      <span class="topology-title">页面拓扑</span>
+      <button class="topology-toggle" id="topology-toggle" title="展开/折叠">▲</button>
     </div>
     <div class="topology-content" id="topology-content">
       <div class="empty-state">
-        <span class="empty-state-icon">\ud83d\udd78\ufe0f</span>
-        <span class="empty-state-text">\u9875\u9762\u7ed3\u6784\u5c06\u5728\u5206\u6790\u540e\u663e\u793a</span>
+        <span class="empty-state-icon">🕸️</span>
+        <span class="empty-state-text">页面结构将在分析后显示</span>
       </div>
     </div>
   </section>
@@ -111,7 +111,7 @@
   <!-- ── 状态栏 ── -->
   <footer class="statusbar">
     <span class="status-dot"></span>
-    <span id="status-project">\u672a\u6253\u5f00\u9879\u76ee</span>
+    <span id="status-project">未打开项目</span>
     <span id="status-encoding">UTF-8</span>
     <span id="status-info"></span>
   </footer>

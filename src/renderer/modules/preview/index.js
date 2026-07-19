@@ -23,9 +23,9 @@ let currentDevice = "desktop";
 
 /** 设备尺寸配置 */
 const DEVICE_SIZES = {
-  desktop: { width: "100%", height: "100%", label: "\ud83d\uddfa\ufe0f" },
-  tablet: { width: "768px", height: "1024px", label: "\ud83d\udcf1" },
-  mobile: { width: "375px", height: "812px", label: "\ud83d\udcf1" },
+  desktop: { width: "100%", height: "100%", label: "🗺️" },
+  tablet: { width: "768px", height: "1024px", label: "📱" },
+  mobile: { width: "375px", height: "812px", label: "📱" },
 };
 
 /**
@@ -49,7 +49,7 @@ async function startPreview(projectPath) {
     if (!result) {
       container.innerHTML = `
         <div class="empty-state">
-          <span class="empty-state-icon">\u26a0\ufe0f</span>
+          <span class="empty-state-icon">⚠️</span>
           <span class="empty-state-text">预览服务器启动失败</span>
         </div>`;
       return;
@@ -69,7 +69,7 @@ async function startPreview(projectPath) {
     console.error("[Preview] 启动失败:", err);
     container.innerHTML = `
       <div class="empty-state">
-        <span class="empty-state-icon">\u26a0\ufe0f</span>
+        <span class="empty-state-icon">⚠️</span>
         <span class="empty-state-text">预览启动失败: ${escapeHtml(err.message)}</span>
       </div>`;
   }
@@ -150,7 +150,7 @@ async function stopPreview() {
   if (container) {
     container.innerHTML = `
       <div class="empty-state">
-        <span class="empty-state-icon">\ud83c\udfa8</span>
+        <span class="empty-state-icon">🎨</span>
         <span class="empty-state-text">预览区将在打开项目后显示</span>
       </div>`;
   }
@@ -222,7 +222,7 @@ function applyDeviceSize(el) {
 function updateUrlBar(url) {
   const urlBar = document.getElementById("preview-url");
   if (urlBar) {
-    urlBar.textContent = url || "\u7b49\u5f85\u9884\u89c8\u2026";
+    urlBar.textContent = url || "等待预览…";
   }
 }
 
@@ -247,13 +247,13 @@ function bindEvents() {
   });
 
   // 刷新按钮
-  const refreshBtn = document.querySelector(".preview-actions .preview-btn[title='\u21bb \u5237\u65b0\u9884\u89c8']");
+  const refreshBtn = document.querySelector(".preview-actions .preview-btn[title='↻ 刷新预览']");
   if (refreshBtn) {
     refreshBtn.addEventListener("click", refresh);
   }
 
   // 外部打开按钮
-  const openBtn = document.querySelector(".preview-actions .preview-btn[title='\u2197 \u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00']");
+  const openBtn = document.querySelector(".preview-actions .preview-btn[title='↗ 在浏览器中打开']");
   if (openBtn) {
     openBtn.addEventListener("click", openInBrowser);
   }

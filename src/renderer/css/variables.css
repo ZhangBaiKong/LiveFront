@@ -59,7 +59,7 @@
      ══════════════════════════════════════════ */
 
   /* ── 字体家族 ── */
-  --font-sans:  "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-sans:  "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "WenQuanYi Micro Hei", system-ui, sans-serif;
   --font-mono:  "JetBrains Mono", "Fira Code", "Consolas", monospace;
 
   /* ── 字号层级 ── */

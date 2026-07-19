@@ -20,37 +20,37 @@ const expandedDirs = new Set();
 
 /** 文件图标映射 */
 const FILE_ICONS = {
-  folder: "\ud83d\udcc1",
-  html: "\ud83d\udd36",
-  htm: "\ud83d\udd36",
-  css: "\ud83d\udd37",
-  scss: "\ud83d\udd37",
-  less: "\ud83d\udd37",
-  js: "\ud83d\udfe1",
-  mjs: "\ud83d\udfe1",
-  ts: "\ud83d\udfe1",
-  jsx: "\ud83d\udfe1",
-  tsx: "\ud83d\udfe1",
-  json: "\ud83d\udfe2",
-  png: "\ud83d\uddbc\ufe0f",
-  jpg: "\ud83d\uddbc\ufe0f",
-  jpeg: "\ud83d\uddbc\ufe0f",
-  gif: "\ud83d\uddbc\ufe0f",
-  svg: "\ud83d\uddbc\ufe0f",
-  webp: "\ud83d\uddbc\ufe0f",
-  ico: "\ud83d\uddbc\ufe0f",
-  md: "\ud83d\udcc4",
-  txt: "\ud83d\udcc4",
-  vue: "\ud83d\udfe2",
-  py: "\ud83d\udfe2",
-  rb: "\ud83d\udfe2",
-  go: "\ud83d\udfe2",
-  rs: "\ud83d\udfe2",
-  yml: "\u2699\ufe0f",
-  yaml: "\u2699\ufe0f",
-  toml: "\u2699\ufe0f",
-  xml: "\u2699\ufe0f",
-  gitignore: "\ud83d\udc19",
+  folder: "📁",
+  html: "🔶",
+  htm: "🔶",
+  css: "🔷",
+  scss: "🔷",
+  less: "🔷",
+  js: "🟡",
+  mjs: "🟡",
+  ts: "🟡",
+  jsx: "🟡",
+  tsx: "🟡",
+  json: "🟢",
+  png: "🖼️",
+  jpg: "🖼️",
+  jpeg: "🖼️",
+  gif: "🖼️",
+  svg: "🖼️",
+  webp: "🖼️",
+  ico: "🖼️",
+  md: "📄",
+  txt: "📄",
+  vue: "🟢",
+  py: "🟢",
+  rb: "🟢",
+  go: "🟢",
+  rs: "🟢",
+  yml: "⚙️",
+  yaml: "⚙️",
+  toml: "⚙️",
+  xml: "⚙️",
+  gitignore: "🐙",
 };
 
 /**
@@ -61,7 +61,7 @@ const FILE_ICONS = {
 function getFileIcon(entry) {
   if (entry.isDirectory) return FILE_ICONS.folder;
   const ext = entry.extension?.replace(".", "") || "";
-  return FILE_ICONS[ext] || "\ud83d\udcc4";
+  return FILE_ICONS[ext] || "📄";
 }
 
 /**
@@ -79,7 +79,7 @@ function renderNode(entry, depth) {
   if (isDir) {
     return `
       <div class="ft-item ft-dir" data-path="${escapeHtml(entry.path)}" data-type="dir" style="padding-left:${indent}px">
-        <span class="ft-icon ft-dir-icon ${isExpanded ? "expanded" : ""}">${isExpanded ? "\u25bc" : "\u25b6"}</span>
+        <span class="ft-icon ft-dir-icon ${isExpanded ? "expanded" : ""}">${isExpanded ? "▼" : "▶"}</span>
         <span class="ft-icon">${icon}</span>
         <span class="ft-name">${escapeHtml(entry.name)}</span>
       </div>
@@ -133,7 +133,7 @@ async function renderTree(rootPath) {
     if (!entries || entries.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <span class="empty-state-icon">\ud83d\udcc2</span>
+          <span class="empty-state-icon">📂</span>
           <span class="empty-state-text">空项目</span>
         </div>`;
       return;
@@ -150,7 +150,7 @@ async function renderTree(rootPath) {
     console.error("[FileTree] 渲染文件树失败:", err);
     container.innerHTML = `
       <div class="empty-state">
-        <span class="empty-state-icon">\u26a0\ufe0f</span>
+        <span class="empty-state-icon">⚠️</span>
         <span class="empty-state-text">无法读取项目</span>
       </div>`;
   }
@@ -213,13 +213,13 @@ async function handleDirClick(item) {
     expandedDirs.delete(dirPath);
     childrenEl.style.display = "none";
     iconEl.classList.remove("expanded");
-    iconEl.textContent = "\u25b6";
+    iconEl.textContent = "▶";
   } else {
     // 展开
     expandedDirs.add(dirPath);
     childrenEl.style.display = "block";
     iconEl.classList.add("expanded");
-    iconEl.textContent = "\u25bc";
+    iconEl.textContent = "▼";
 
     // 懒加载子目录
     if (childrenEl.children.length === 0) {
@@ -250,17 +250,17 @@ function showContextMenu(x, y, item) {
   menu.style.top = `${y}px`;
 
   const items = [
-    { label: "\ud83d\uddc2\ufe0f 新建文件", action: () => createNewFile(dirPath) },
+    { label: "🗂️ 新建文件", action: () => createNewFile(dirPath) },
   ];
 
   if (isDir) {
-    items.push({ label: "\ud83d\uddc1\ufe0f 新建文件夹", action: () => createNewFolder(dirPath) });
+    items.push({ label: "🗁️ 新建文件夹", action: () => createNewFolder(dirPath) });
   }
 
   items.push(
-    { label: "\u270f\ufe0f 重命名", action: () => renameItem(filePath, fileName) },
+    { label: "✏️ 重命名", action: () => renameItem(filePath, fileName) },
     { type: "separator" },
-    { label: "\ud83d\uddd1\ufe0f 删除", action: () => deleteItem(filePath), danger: true }
+    { label: "🗑️ 删除", action: () => deleteItem(filePath), danger: true }
   );
 
   items.forEach((menuItem) => {
@@ -474,7 +474,7 @@ const manifest = {
     ctx.commands?.register("filetree.openFolder", openFolder);
 
     // 监听刷新按钮
-    const refreshBtn = document.querySelector(".file-tree .panel-btn[title='\u21bb']");
+    const refreshBtn = document.querySelector(".file-tree .panel-btn[title='↻']");
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => {
         if (currentProjectPath) renderTree(currentProjectPath);
