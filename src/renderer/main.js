@@ -308,11 +308,23 @@ function initWelcomePage() {
   welcomePage.removeAttribute("hidden");
   workspace.setAttribute("hidden", "");
 
-  // "打开项目"按钮 → 触发打开文件夹
+  // "打开项目"按钮 → 直接打开文件夹对话框
   const btnOpen = document.getElementById("btn-open-project");
   if (btnOpen) {
-    btnOpen.addEventListener("click", () => {
-      app.commands.execute("filetree.openFolder");
+    btnOpen.addEventListener("click", async () => {
+      console.log("[Welcome] 点击打开项目");
+      try {
+        const folderPath = await app.ipc.fs.openFolder();
+        if (!folderPath) return;
+        const folderName = folderPath.split(/[\\\/]/).pop();
+        app.services.setState("project.path", folderPath);
+        app.services.setState("project.name", folderName);
+        app.services.setState("project.isOpen", true);
+        filetreeModule.renderTree(folderPath);
+        app.eventBus.emit("filetree:folder-opened", { path: folderPath, name: folderName });
+      } catch (err) {
+        console.error("[Welcome] 打开文件夹失败:", err);
+      }
     });
   }
 
@@ -320,7 +332,8 @@ function initWelcomePage() {
   const btnNew = document.getElementById("btn-new-project");
   if (btnNew) {
     btnNew.addEventListener("click", () => {
-      app.services.toast("新建项目功能即将上线", "info");
+      console.log("[Welcome] 点击新建项目");
+      showWorkspace();
     });
   }
 
@@ -412,4 +425,4 @@ function escapeHtml(str) {
 }
 
 // ── 启动 ──
-document.addEventListener("DOMContentLoaded", initApp);
+if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", initApp); } else { initApp(); }
