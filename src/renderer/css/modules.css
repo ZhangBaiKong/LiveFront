@@ -1,0 +1,325 @@
+﻿/**
+ * LiveFront v2.0 – 模块样式
+ *
+ * 文件树 + 预览区 + 上下文菜单样式
+ */
+
+/* ═══════════════════════════════════════════════════
+   文件树
+   ═══════════════════════════════════════════════════ */
+
+/* 文件树容器 */
+.file-tree {
+  width: 220px;
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+#filetree-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-xs) 0;
+  flex: 1;
+}
+
+/* 文件/目录项 */
+.ft-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 26px;
+  padding-right: var(--space-sm);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: var(--text-sm);
+}
+
+.ft-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.ft-item.selected {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+/* 文件图标 */
+.ft-icon {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* 目录展开/折叠箭头 */
+.ft-dir-icon {
+  font-size: 8px;
+  color: var(--color-text-tertiary);
+  transition: transform var(--duration-fast);
+}
+
+.ft-dir-icon.expanded {
+  color: var(--color-text-secondary);
+}
+
+/* 文件名 */
+.ft-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* 子目录容器 */
+.ft-children {
+  /* 由 JS 控制 display */
+}
+
+
+/* ═══════════════════════════════════════════════════
+   上下文菜单
+   ═══════════════════════════════════════════════════ */
+
+.ft-context-menu {
+  position: fixed;
+  z-index: 10000;
+  min-width: 160px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-xs) 0;
+  animation: menuFadeIn 150ms var(--ease-spring);
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ft-context-item {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.ft-context-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.ft-context-item.danger:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.ft-context-separator {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-xs) 0;
+}
+
+
+/* ═══════════════════════════════════════════════════
+   预览区
+   ═══════════════════════════════════════════════════ */
+
+/* 预览区顶部工具栏 */
+.preview-toolbar {
+  height: 36px;
+  padding: 0 var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  flex-shrink: 0;
+}
+
+/* 设备切换按钮 */
+.device-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.device-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.device-btn.active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.device-btn:hover:not(.active) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+/* URL 栏 */
+.preview-url {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--space-sm);
+  height: 24px;
+  line-height: 24px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* 预览操作按钮 */
+.preview-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.preview-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.preview-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+/* 预览容器 */
+.preview-container {
+  flex: 1;
+  background: var(--color-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 预览 iframe 包装器 */
+.preview-frame-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  transition: width var(--duration-normal), height var(--duration-normal);
+}
+
+/* 预览 iframe */
+.preview-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* 预览加载状态 */
+.preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.preview-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   新建文件按钮
+   ═══════════════════════════════════════════════════ */
+
+.ft-new-btn {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  transition: color var(--duration-fast);
+}
+
+.ft-new-btn:hover {
+  color: var(--color-accent);
+}
+
+
+/* ═══════════════════════════════════════════════════
+   属性面板
+   ═══════════════════════════════════════════════════ */
+
+.prop-section {
+  padding: var(--space-xs) var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prop-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  min-width: 40px;
+}
+
+.prop-value {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}

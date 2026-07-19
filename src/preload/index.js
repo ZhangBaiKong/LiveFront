@@ -1,5 +1,5 @@
-/**
- * LiveFront v2.0 — 预加载脚本
+﻿/**
+ * LiveFront v2.0 – 预加载脚本
  *
  * 职责：
  *   通过 contextBridge 安全地向渲染进程暴露 API
@@ -24,17 +24,26 @@ const IPC_CHANNELS = {
     "window:minimize",
     "window:maximize",
     "window:close",
-    // 后续模块追加：
-    // "fs:readDir", "fs:readFile", "fs:writeFile",
-    // "preview:start", "preview:stop", "preview:getUrl",
-    // "ai:send", "ai:cancel",
-    // "terminal:create", "terminal:write", "terminal:resize",
+    // 文件系统
+    "fs:readDir",
+    "fs:readFile",
+    "fs:writeFile",
+    "fs:createFile",
+    "fs:rename",
+    "fs:delete",
+    "fs:stat",
+    "fs:openFolder",
+    // 预览服务器
+    "preview:start",
+    "preview:stop",
+    "preview:getUrl",
   ],
   send: [
     // 单向发送频道（渲染 → 主进程）
   ],
   on: [
     // 监听频道（主进程 → 渲染进程）
+    "preview:message",
   ],
 };
 
@@ -73,6 +82,32 @@ contextBridge.exposeInMainWorld("LiveFront", {
   },
 
   /**
+   * 文件系统 API
+   */
+  fs: {
+    readDir: (dirPath) => ipcRenderer.invoke("fs:readDir", dirPath),
+    readFile: (filePath) => ipcRenderer.invoke("fs:readFile", filePath),
+    writeFile: (filePath, content) =>
+      ipcRenderer.invoke("fs:writeFile", filePath, content),
+    createFile: (dirPath, fileName) =>
+      ipcRenderer.invoke("fs:createFile", dirPath, fileName),
+    rename: (oldPath, newPath) =>
+      ipcRenderer.invoke("fs:rename", oldPath, newPath),
+    delete: (filePath) => ipcRenderer.invoke("fs:delete", filePath),
+    stat: (filePath) => ipcRenderer.invoke("fs:stat", filePath),
+    openFolder: () => ipcRenderer.invoke("fs:openFolder"),
+  },
+
+  /**
+   * 预览服务器 API
+   */
+  preview: {
+    start: (projectPath) => ipcRenderer.invoke("preview:start", projectPath),
+    stop: () => ipcRenderer.invoke("preview:stop"),
+    getUrl: () => ipcRenderer.invoke("preview:getUrl"),
+  },
+
+  /**
    * 通用 IPC 调用（带白名单校验）
    * @param {string} channel - 频道名
    * @param  {...any} args - 参数
@@ -101,4 +136,3 @@ contextBridge.exposeInMainWorld("LiveFront", {
     },
   },
 });
-

@@ -1,5 +1,5 @@
-/**
- * LiveFront v2.0 — IPC 通信客户端
+﻿/**
+ * LiveFront v2.0 – IPC 通信客户端
  *
  * 封装 window.LiveFront（由 preload 脚本注入）的调用，
  * 提供统一的错误处理和超时机制。
@@ -26,7 +26,7 @@ export class IpcClient {
   }
 
   /**
-   * 双向调用（渲染 → 主进程 → 渲染）
+   * 双向调用（渲染 ↔ 主进程 → 渲染）
    * @param {string} channel - IPC 频道名
    * @param  {...any} args - 参数
    * @param {number} [timeout] - 超时时间（毫秒）
@@ -67,5 +67,25 @@ export class IpcClient {
     maximize: () => this._api?.window.maximize(),
     close: () => this._api?.window.close(),
   };
-}
 
+  /** 文件系统操作 */
+  fs = {
+    readDir: (dirPath) => this._api?.fs.readDir(dirPath),
+    readFile: (filePath) => this._api?.fs.readFile(filePath),
+    writeFile: (filePath, content) =>
+      this._api?.fs.writeFile(filePath, content),
+    createFile: (dirPath, fileName) =>
+      this._api?.fs.createFile(dirPath, fileName),
+    rename: (oldPath, newPath) => this._api?.fs.rename(oldPath, newPath),
+    delete: (filePath) => this._api?.fs.delete(filePath),
+    stat: (filePath) => this._api?.fs.stat(filePath),
+    openFolder: () => this._api?.fs.openFolder(),
+  };
+
+  /** 预览服务器操作 */
+  preview = {
+    start: (projectPath) => this._api?.preview.start(projectPath),
+    stop: () => this._api?.preview.stop(),
+    getUrl: () => this._api?.preview.getUrl(),
+  };
+}
